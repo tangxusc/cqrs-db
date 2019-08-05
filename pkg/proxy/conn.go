@@ -2,11 +2,11 @@ package proxy
 
 import (
 	"context"
-	"cqrs-db/pkg/config"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
+	"github.com/tangxusc/cqrs-db/pkg/config"
 	"os"
 )
 

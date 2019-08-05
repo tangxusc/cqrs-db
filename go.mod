@@ -1,4 +1,4 @@
-module cqrs-db
+module github.com/tangxusc/cqrs-db
 
 go 1.12
 

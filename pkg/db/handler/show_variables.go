@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"cqrs-db/pkg/db"
-	py "cqrs-db/pkg/proxy"
 	"github.com/siddontang/go-mysql/mysql"
+	"github.com/tangxusc/cqrs-db/pkg/db"
+	py "github.com/tangxusc/cqrs-db/pkg/proxy"
 	"regexp"
 )
 

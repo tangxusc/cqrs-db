@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"cqrs-db/pkg/db"
 	"github.com/siddontang/go-mysql/mysql"
+	"github.com/tangxusc/cqrs-db/pkg/db"
 	"regexp"
 )
 

@@ -2,11 +2,11 @@ package db
 
 import (
 	"context"
-	"cqrs-db/pkg/config"
 	"fmt"
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/siddontang/go-mysql/server"
 	"github.com/sirupsen/logrus"
+	"github.com/tangxusc/cqrs-db/pkg/config"
 	"net"
 	"os"
 )

@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"context"
-	"cqrs-db/pkg/config"
-	"cqrs-db/pkg/db"
-	_ "cqrs-db/pkg/db/handler"
-	"cqrs-db/pkg/proxy"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/tangxusc/cqrs-db/pkg/config"
+	"github.com/tangxusc/cqrs-db/pkg/db"
+	_ "github.com/tangxusc/cqrs-db/pkg/db/handler"
+	"github.com/tangxusc/cqrs-db/pkg/proxy"
 	"math/rand"
 	"os"
 	"os/signal"

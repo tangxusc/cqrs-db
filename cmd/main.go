@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"cqrs-db/pkg/cmd"
 	"github.com/sirupsen/logrus"
+	"github.com/tangxusc/cqrs-db/pkg/cmd"
 )
 
 func main() {
