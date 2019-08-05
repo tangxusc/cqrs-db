@@ -26,25 +26,14 @@ func (s *showVariables) Match(query string) bool {
 }
 
 func (s *showVariables) Handler(query string) (*mysql.Result, error) {
-	var resultSet *mysql.Resultset
-	var err error
-
-	var name string
-	var value string
-	rows := make([][]interface{}, 0)
-	err = py.Query(query, func() []interface{} {
-		return []interface{}{&name, &value}
-	}, func(row []interface{}) {
-		i := make([]interface{}, 0, len(row))
-		i = append(i, name)
-		i = append(i, value)
-		rows = append(rows, i)
-	})
+	columnNames, columnValues, err := py.Proxy(query)
 	if err != nil {
 		return nil, err
 	}
-
-	resultSet, err = mysql.BuildSimpleTextResultset([]string{"Variable_name", "Value"}, rows)
+	resultSet, err := mysql.BuildSimpleTextResultset(columnNames, columnValues)
+	if err != nil {
+		return nil, err
+	}
 
 	result := &mysql.Result{
 		Status:       mysql.SERVER_STATUS_AUTOCOMMIT,

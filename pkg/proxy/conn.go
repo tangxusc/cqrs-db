@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tangxusc/cqrs-db/pkg/config"
 	"os"
+	"time"
 )
 
 var db *sql.DB
@@ -22,19 +23,30 @@ func InitConn(ctx context.Context) {
 		os.Exit(1)
 	}
 	defer db.Close()
-
+	db.SetConnMaxLifetime(time.Duration(config.Instance.Proxy.LifeTime) * time.Second)
+	db.SetMaxOpenConns(config.Instance.Proxy.MaxOpen)
+	db.SetMaxIdleConns(config.Instance.Proxy.MaxIdle)
 	<-ctx.Done()
 }
 
-func Query(query string, newRow func() []interface{}, rowAfter func(row []interface{})) error {
-	logrus.Debugf("[proxy]查询:%s", query)
+func Query(query string, newRow func(types []*sql.ColumnType) []interface{}, rowAfter func(row []interface{}), setColumnNames func([]string)) error {
+	logrus.Debugf("[proxy]Query:%s", query)
 	rows, e := db.Query(query)
 	if e != nil {
 		return e
 	}
 	defer rows.Close()
+	types, e := rows.ColumnTypes()
+	if e != nil {
+		return e
+	}
+	strings, e := rows.Columns()
+	if e != nil {
+		return e
+	}
+	setColumnNames(strings)
 	for rows.Next() {
-		row := newRow()
+		row := newRow(types)
 		e := rows.Scan(row...)
 		if e != nil {
 			return e
@@ -42,4 +54,38 @@ func Query(query string, newRow func() []interface{}, rowAfter func(row []interf
 		rowAfter(row)
 	}
 	return nil
+}
+func Proxy(query string) (columnNames []string, columnValues [][]interface{}, err error) {
+	logrus.Debugf("[proxy]Proxy:%s", query)
+	var temp interface{} = ""
+	var rowOrigin []interface{}
+	var result []interface{}
+
+	columnValues = make([][]interface{}, 0)
+	err = Query(query,
+		func(types []*sql.ColumnType) []interface{} {
+			if result == nil {
+				result = make([]interface{}, len(types))
+				rowOrigin = make([]interface{}, 0, len(types))
+				for key, _ := range types {
+					rowOrigin = append(rowOrigin, temp)
+					result[key] = &rowOrigin[key]
+				}
+			}
+			return result
+		},
+		func(row []interface{}) {
+			i := make([]interface{}, len(row))
+			for key, _ := range row {
+				i[key] = rowOrigin[key]
+			}
+			columnValues = append(columnValues, i)
+		},
+		func(strings []string) {
+			columnNames = strings
+		})
+	if err != nil {
+		return
+	}
+	return
 }
