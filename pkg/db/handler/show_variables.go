@@ -2,20 +2,19 @@ package handler
 
 import (
 	"github.com/siddontang/go-mysql/mysql"
-	"github.com/tangxusc/cqrs-db/pkg/db"
 	py "github.com/tangxusc/cqrs-db/pkg/proxy"
 	"regexp"
 )
 
-func init() {
-	variables := &showVariables{}
-	compile, e := regexp.Compile(`(?i).*\s*SHOW VARIABLES$`)
-	if e != nil {
-		panic(e.Error())
-	}
-	variables.compile = compile
-	db.Handlers = append(db.Handlers, variables)
-}
+//func init() {
+//	variables := &showVariables{}
+//	compile, e := regexp.Compile(`(?i).*\s*SHOW VARIABLES$`)
+//	if e != nil {
+//		panic(e.Error())
+//	}
+//	variables.compile = compile
+//	db.Handlers = append(db.Handlers, variables)
+//}
 
 type showVariables struct {
 	compile *regexp.Regexp

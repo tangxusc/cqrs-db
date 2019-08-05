@@ -13,6 +13,7 @@ type QueryHandler interface {
 }
 
 var Handlers = make([]QueryHandler, 0)
+var DefaultHandler QueryHandler
 
 func NewHandler() server.Handler {
 	return &TestHandler{}
@@ -33,10 +34,11 @@ func (t *TestHandler) HandleQuery(query string) (*mysql.Result, error) {
 			return value.Handler(query)
 		}
 	}
-	return nil, mysql.NewError(
-		mysql.ER_UNKNOWN_ERROR,
-		fmt.Sprintf("command [%s] is not supported now", query),
-	)
+	return DefaultHandler.Handler(query)
+	//return nil, mysql.NewError(
+	//	mysql.ER_UNKNOWN_ERROR,
+	//	fmt.Sprintf("command [%s] is not supported now", query),
+	//)
 }
 
 func (t *TestHandler) HandleFieldList(table string, fieldWildcard string) ([]*mysql.Field, error) {
