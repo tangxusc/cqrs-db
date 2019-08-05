@@ -35,10 +35,6 @@ func (t *TestHandler) HandleQuery(query string) (*mysql.Result, error) {
 		}
 	}
 	return DefaultHandler.Handler(query)
-	//return nil, mysql.NewError(
-	//	mysql.ER_UNKNOWN_ERROR,
-	//	fmt.Sprintf("command [%s] is not supported now", query),
-	//)
 }
 
 func (t *TestHandler) HandleFieldList(table string, fieldWildcard string) ([]*mysql.Field, error) {
@@ -51,18 +47,19 @@ func (t *TestHandler) HandleStmtPrepare(query string) (params int, columns int, 
 	return 0, 0, nil, nil
 }
 
+//todo:无法返回结果,结果集为空(尽管已经返回了结果集)
 func (t *TestHandler) HandleStmtExecute(context interface{}, query string, args []interface{}) (*mysql.Result, error) {
-	logrus.Debug("HandleStmtExecute(context:%v,query:%v,args:%v)", context, query, args)
+	logrus.Debugf("HandleStmtExecute(context:%v,query:%v,args:%v)", context, query, args)
 	return t.HandleQuery(query)
 }
 
 func (t *TestHandler) HandleStmtClose(context interface{}) error {
-	logrus.Debug("HandleStmtClose(context:%v)", context)
+	logrus.Debugf("HandleStmtClose(context:%v)", context)
 	return nil
 }
 
 func (t *TestHandler) HandleOtherCommand(cmd byte, data []byte) error {
-	logrus.Debug("HandleOtherCommand(cmd:%v,data:%v)", cmd, data)
+	logrus.Debugf("HandleOtherCommand(cmd:%v,data:%v)", cmd, data)
 	return mysql.NewError(
 		mysql.ER_UNKNOWN_ERROR,
 		fmt.Sprintf("command %d is not supported now", cmd),

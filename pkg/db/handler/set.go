@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/db"
+	"github.com/tangxusc/cqrs-db/pkg/proxy"
 	"regexp"
 )
 
@@ -25,5 +26,10 @@ func (s *set) Match(query string) bool {
 }
 
 func (s *set) Handler(query string) (*mysql.Result, error) {
+	_, _, err := proxy.Proxy(query)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
