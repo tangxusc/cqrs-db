@@ -22,23 +22,25 @@ func TestTestHandler_HandleQuery(t *testing.T) {
 	if e != nil {
 		panic(e.Error())
 	}
+	defer tx.Commit()
 	stmt, e := tx.Prepare("select * from some_table_name")
 	if e != nil {
 		panic(e.Error())
 	}
+	defer stmt.Close()
 	rows, e := stmt.Query()
 	if e != nil {
 		panic(e.Error())
 	}
-	fmt.Println(rows.Columns())
+	defer rows.Close()
+	strings, e := rows.Columns()
+	fmt.Println("获取的行:", strings, e)
 	for rows.Next() {
 		e := rows.Scan(&test1, &test2)
 		if e != nil {
 			panic(e.Error())
 		}
-		fmt.Println(test1, test2)
+		fmt.Println("test1:", test1, ",test2:", test2)
 	}
-	fmt.Println(test1, test2)
-	rows.Close()
 
 }

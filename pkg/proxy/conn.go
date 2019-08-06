@@ -29,6 +29,32 @@ func InitConn(ctx context.Context) {
 	<-ctx.Done()
 }
 
+func QueryOne(sqlString string, scan []interface{}, param ...interface{}) error {
+	stmt, e := db.Prepare(sqlString)
+	if e != nil {
+		return e
+	}
+	defer stmt.Close()
+	row := stmt.QueryRow(param...)
+	e = row.Scan(scan...)
+	//未找到记录
+	if e != nil && e == sql.ErrNoRows {
+		return nil
+	}
+	if e != nil {
+		return e
+	}
+	return nil
+}
+
+func QueryList(sqlString string, newRow func(types []*sql.ColumnType) []interface{}) error {
+	return Query(sqlString, newRow, func(row []interface{}) {
+		//忽略
+	}, func(strings []string) {
+		//忽略
+	})
+}
+
 func Query(query string, newRow func(types []*sql.ColumnType) []interface{}, rowAfter func(row []interface{}), setColumnNames func([]string)) error {
 	logrus.Debugf("[proxy]Query:%s", query)
 	rows, e := db.Query(query)
