@@ -1,72 +1,47 @@
-/* mysql-connector-java-8.0.16 (Revision: 34cbc6bc61f72836e26327537a432d6db7c77de6) */
-SELECT @@session.auto_increment_increment AS auto_increment_increment,
-       @@character_set_client             AS character_set_client,
-       @@character_set_connection         AS character_set_connection,
-       @@character_set_results            AS character_set_results,
-       @@character_set_server             AS character_set_server,
-       @@collation_server                 AS collation_server,
-       @@collation_connection             AS collation_connection,
-       @@init_connect                     AS init_connect,
-       @@interactive_timeout              AS interactive_timeout,
-       @@license                          AS license,
-       @@lower_case_table_names           AS lower_case_table_names,
-       @@max_allowed_packet               AS max_allowed_packet,
-       @@net_write_timeout                AS net_write_timeout,
-       @@performance_schema               AS performance_schema,
-       @@sql_mode                         AS sql_mode,
-       @@system_time_zone                 AS system_time_zone,
-       @@time_zone                        AS time_zone,
-       @@transaction_isolation            AS transaction_isolation,
-       @@wait_timeout                     AS wait_timeout
+# 插入事件
+create schema test;
+create table test.event
+(
+    id          varchar(36)  not null,
+    type        varchar(20)  null,
+    agg_id      varchar(36)  null,
+    agg_type    varchar(36)  null,
+    create_time timestamp    null,
+    data        varchar(500) null,
+    constraint event_pk
+        primary key (id)
+);
 
-auto_increment_increment: 1
-    character_set_client: latin1
-character_set_connection: latin1
-   character_set_results: NULL
-    character_set_server: utf8mb4
-        collation_server: utf8mb4_0900_ai_ci
-    collation_connection: latin1_swedish_ci
-            init_connect:
-     interactive_timeout: 28800
-                 license: GPL
-  lower_case_table_names: 0
-      max_allowed_packet: 67108864
-       net_write_timeout: 60
-      performance_schema: 1
-                sql_mode: ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
-        system_time_zone: UTC
-               time_zone: SYSTEM
-   transaction_isolation: REPEATABLE-READ
-            wait_timeout: 28800
+create table test.snapshot
+(
+    id          varchar(36)  not null,
+    agg_id      varchar(36)  null,
+    agg_type    varchar(36)  null,
+    create_time timestamp    null,
+    data        varchar(500) null,
+    constraint snapshot_pk
+        primary key (id)
+);
 
+insert into test.event
+values ('1', 'E1', '1', 'A1', str_to_date('2018-05-02', '%Y-%m-%d %H'), '{"name":"test1"}');
+insert into test.event
+values ('2', 'E1', '1', 'A1', str_to_date('2018-05-03', '%Y-%m-%d %H'), '{"age":10}');
+insert into test.event
+values ('3', 'E1', '1', 'A1', str_to_date('2018-05-04', '%Y-%m-%d %H'), '{"name":"test2"}');
+insert into test.event
+values ('4', 'E1', '1', 'A1', str_to_date('2018-05-05', '%Y-%m-%d %H'), '{"name":"test3","age":null}');
 
-show variables;
+insert into test.snapshot
+values ('1', '1', 'A1', str_to_date('2018-05-03', '%Y-%m-%d %H'), '{"name":"test1","age":10}');
 
-set autocommit = 1;
-
-SELECT @@session.tx_isolation;
-
-
-/* mysql-connector-java-8.0.16 (Revision: 34cbc6bc61f72836e26327537a432d6db7c77de6) */SHOW VARIABLES;
-
-/* mysql-connector-java-8.0.16 (Revision: 34cbc6bc61f72836e26327537a432d6db7c77de6) */
-SELECT @@session.auto_increment_increment AS auto_increment_increment,
-       @@character_set_client             AS character_set_client,
-       @@character_set_connection         AS character_set_connection,
-       @@character_set_results            AS character_set_results,
-       @@character_set_server             AS character_set_server,
-       @@collation_server                 AS collation_server,
-       @@collation_connection             AS collation_connection,
-       @@init_connect                     AS init_connect,
-       @@interactive_timeout              AS interactive_timeout,
-       @@license                          AS license,
-       @@lower_case_table_names           AS lower_case_table_names,
-       @@max_allowed_packet               AS max_allowed_packet,
-       @@net_write_timeout                AS net_write_timeout,
-       @@performance_schema               AS performance_schema,
-       @@sql_mode                         AS sql_mode,
-       @@system_time_zone                 AS system_time_zone,
-       @@time_zone                        AS time_zone,
-       @@transaction_isolation            AS transaction_isolation,
-       @@wait_timeout                     AS wait_timeout
-
+# 查询聚合 mysql -uroot -P3307 -h 127.0.0.1
+select id as c1, data as c3, agg_type as c2
+from a1_aggregate a1
+where id = '1';
+# +------+------+-----------------------------+
+# | c1   | c2   | c3                          |
+# +------+------+-----------------------------+
+# | 1    | a1   | {"age":null,"name":"test3"} |
+# +------+------+-----------------------------+
+# 1 row in set (0.00 sec)
