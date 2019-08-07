@@ -9,4 +9,5 @@ require (
 	github.com/sirupsen/logrus v1.4.1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
+	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 )
