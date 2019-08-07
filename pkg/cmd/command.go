@@ -24,6 +24,7 @@ func NewCommand(ctx context.Context) *cobra.Command {
 
 			go db.Start(ctx)
 			go proxy.InitConn(ctx)
+			defer proxy.CloseConn()
 
 			<-ctx.Done()
 		},

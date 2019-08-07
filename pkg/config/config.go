@@ -31,7 +31,7 @@ func BindParameter(cmd *cobra.Command) {
 
 	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Address, "proxy-address", "", "172.17.0.2", "proxy数据库连接地址")
 	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Port, "proxy-port", "", "3306", "proxy数据库端口")
-	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Database, "proxy-Database", "", "information_schema", "proxy数据库实例")
+	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Database, "proxy-Database", "", "test", "proxy数据库实例")
 	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Username, "proxy-Username", "", "root", "proxy数据库用户名")
 	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Password, "proxy-Password", "", "123456", "proxy数据库密码")
 	cmd.PersistentFlags().IntVarP(&Instance.Proxy.LifeTime, "proxy-LifeTime", "", 10, "proxy数据库连接最大连接周期(秒)")

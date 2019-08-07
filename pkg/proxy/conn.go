@@ -22,11 +22,16 @@ func InitConn(ctx context.Context) {
 		logrus.Errorf("[proxy]连接出现错误,url:%v,错误:%v", dsn, e.Error())
 		os.Exit(1)
 	}
-	defer db.Close()
 	db.SetConnMaxLifetime(time.Duration(config.Instance.Proxy.LifeTime) * time.Second)
 	db.SetMaxOpenConns(config.Instance.Proxy.MaxOpen)
 	db.SetMaxIdleConns(config.Instance.Proxy.MaxIdle)
-	<-ctx.Done()
+}
+
+func CloseConn() {
+	if db != nil {
+		db.Close()
+		db = nil
+	}
 }
 
 func QueryOne(sqlString string, scan []interface{}, param ...interface{}) error {
@@ -47,17 +52,21 @@ func QueryOne(sqlString string, scan []interface{}, param ...interface{}) error 
 	return nil
 }
 
-func QueryList(sqlString string, newRow func(types []*sql.ColumnType) []interface{}) error {
+func QueryList(sqlString string, newRow func(types []*sql.ColumnType) []interface{}, param ...interface{}) error {
 	return Query(sqlString, newRow, func(row []interface{}) {
 		//忽略
 	}, func(strings []string) {
 		//忽略
-	})
+	}, param...)
 }
 
-func Query(query string, newRow func(types []*sql.ColumnType) []interface{}, rowAfter func(row []interface{}), setColumnNames func([]string)) error {
+func Query(query string, newRow func(types []*sql.ColumnType) []interface{}, rowAfter func(row []interface{}), setColumnNames func([]string), param ...interface{}) error {
 	logrus.Debugf("[proxy]Query:%s", query)
-	rows, e := db.Query(query)
+	stmt, e := db.Prepare(query)
+	if e != nil {
+		return e
+	}
+	rows, e := stmt.Query(param...)
 	if e != nil {
 		return e
 	}

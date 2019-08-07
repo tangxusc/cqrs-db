@@ -3,7 +3,7 @@ package aggregate
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"github.com/sirupsen/logrus"
 	"github.com/tangxusc/cqrs-db/pkg/proxy"
 	"strings"
 	"time"
@@ -18,6 +18,7 @@ type snapshot struct {
 }
 type event struct {
 	Id         string
+	Type       string
 	AggId      string
 	AggType    string
 	createTime time.Time
@@ -34,14 +35,7 @@ type event struct {
 解锁(unlock)
 */
 //TODO:加入缓存
-func Sourcing(ident []string) (id string, aggType string, data string, err error) {
-	//检查是否传入了id和类型
-	if len(ident) != 2 {
-		err = fmt.Errorf("sql语句错误,请传入正确的参数")
-		return
-	}
-	id = ident[1]
-	aggType = ident[0]
+func Sourcing(id string, aggType string) (data string, err error) {
 	//lock
 	Lock(id, aggType)
 	defer UnLock(id, aggType)
@@ -49,16 +43,22 @@ func Sourcing(ident []string) (id string, aggType string, data string, err error
 	sh := &snapshot{}
 	err = proxy.QueryOne(`select * from snapshot where agg_id=? and agg_type=? order by create_time limit 0,1`, []interface{}{&sh.Id, &sh.AggId, &sh.AggType, &sh.createTime, &sh.data}, id, aggType)
 	if err != nil {
-		return
+		//没找到快照也进行聚合
+		logrus.Warnf("[aggregate]查找快照出现错误,聚合:%v:%v,错误:%v", aggType, id, err)
 	}
 	//根据快照的时间查询快照发生后的事件
 	events := make([]*event, 0)
-	err = proxy.QueryList(`select * from event where agg_id=? and agg_type=? order by create_time asc`, func(types []*sql.ColumnType) []interface{} {
+	newRow := func(types []*sql.ColumnType) []interface{} {
 		e := &event{}
-		result := []interface{}{&e.Id, &e.AggId, &e.AggType, &e.createTime, &e.data}
+		result := []interface{}{&e.Id, &e.Type, &e.AggId, &e.AggType, &e.createTime, &e.data}
 		events = append(events, e)
 		return result
-	})
+	}
+	if sh.createTime.IsZero() {
+		err = proxy.QueryList(`select * from event where agg_id=? and agg_type=? order by create_time asc`, newRow, id, aggType)
+	} else {
+		err = proxy.QueryList(`select * from event where agg_id=? and agg_type=? and create_time > ? order by create_time asc`, newRow, id, aggType, sh.createTime)
+	}
 	if err != nil {
 		return
 	}

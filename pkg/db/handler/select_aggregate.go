@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/aggregate"
 	"github.com/tangxusc/cqrs-db/pkg/db"
@@ -29,7 +30,12 @@ func (s *selectAggregate) Match(query string) bool {
 //TODO:实现sql查询别名的识别和应用
 func (s *selectAggregate) Handler(query string) (*mysql.Result, error) {
 	subMatch := s.compile.FindStringSubmatch(query)
-	id, aggType, data, err := aggregate.Sourcing(subMatch)
+	if len(subMatch) != 3 {
+		return nil, fmt.Errorf("sql语句错误,请传入正确的参数")
+	}
+	id := subMatch[2]
+	aggType := subMatch[1]
+	data, err := aggregate.Sourcing(id, aggType)
 	if err != nil {
 		return nil, err
 	}
