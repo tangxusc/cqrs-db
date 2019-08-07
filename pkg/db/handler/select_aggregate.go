@@ -10,7 +10,7 @@ import (
 
 func init() {
 	variables := &selectAggregate{}
-	compile, e := regexp.Compile(`(?i).*\s*select \* from (\w+) where id='(\w+)'$`)
+	compile, e := regexp.Compile(`(?i).*\s*select \* from (\w+)_Aggregate where id='(\w+)'$`)
 	if e != nil {
 		panic(e.Error())
 	}

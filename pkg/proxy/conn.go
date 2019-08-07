@@ -35,6 +35,7 @@ func CloseConn() {
 }
 
 func QueryOne(sqlString string, scan []interface{}, param ...interface{}) error {
+	logrus.Debugf("[proxy]QueryOne:%s,param:%v", sqlString, param)
 	stmt, e := db.Prepare(sqlString)
 	if e != nil {
 		return e
@@ -61,7 +62,7 @@ func QueryList(sqlString string, newRow func(types []*sql.ColumnType) []interfac
 }
 
 func Query(query string, newRow func(types []*sql.ColumnType) []interface{}, rowAfter func(row []interface{}), setColumnNames func([]string), param ...interface{}) error {
-	logrus.Debugf("[proxy]Query:%s", query)
+	logrus.Debugf("[proxy]Query:%s,param:%v", query, param)
 	stmt, e := db.Prepare(query)
 	if e != nil {
 		return e
@@ -111,6 +112,8 @@ func Proxy(query string) (columnNames []string, columnValues [][]interface{}, er
 		},
 		func(row []interface{}) {
 			i := make([]interface{}, len(row))
+			//TODO:select now() from dual;对于time类型的转换
+			//ERROR 1105 (HY000): unsupport type time.Time for resultset
 			for key, _ := range row {
 				i[key] = rowOrigin[key]
 			}
