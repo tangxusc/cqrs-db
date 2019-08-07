@@ -34,6 +34,29 @@ func CloseConn() {
 	}
 }
 
+func Insert(sqlString string, param ...interface{}) error {
+	logrus.Debugf("[proxy]Insert:%s,param:%v", sqlString, param)
+	tx, e := db.Begin()
+	if e != nil {
+		return e
+	}
+	stmt, e := tx.Prepare(sqlString)
+	if e != nil {
+		return e
+	}
+	defer stmt.Close()
+	_, e = stmt.Exec(param...)
+	if e != nil {
+		e = tx.Rollback()
+		if e != nil {
+			return e
+		}
+		return e
+	}
+	e = tx.Commit()
+	return e
+}
+
 func QueryOne(sqlString string, scan []interface{}, param ...interface{}) error {
 	logrus.Debugf("[proxy]QueryOne:%s,param:%v", sqlString, param)
 	stmt, e := db.Prepare(sqlString)
@@ -91,6 +114,7 @@ func Query(query string, newRow func(types []*sql.ColumnType) []interface{}, row
 	}
 	return nil
 }
+
 func Proxy(query string) (columnNames []string, columnValues [][]interface{}, err error) {
 	logrus.Debugf("[proxy]Proxy:%s", query)
 	var temp interface{} = ""
