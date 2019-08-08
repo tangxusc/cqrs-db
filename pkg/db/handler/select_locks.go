@@ -29,7 +29,7 @@ func (s *selectLocks) Handler(query string, stmt sqlparser.Statement, handler *d
 	aggregate.Locks.Range(func(key, value interface{}) bool {
 		entry := value.(*aggregate.LockEntry)
 		rows = append(rows, []interface{}{entry.Key, entry.Value})
-		return false
+		return true
 	})
 
 	resultset, err = mysql.BuildSimpleTextResultset([]string{"key", "lock"}, rows)

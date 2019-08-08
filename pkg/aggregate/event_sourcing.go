@@ -27,6 +27,10 @@ func Sourcing(id string, aggType string, handler *db.ConnHandler) (data string, 
 		err = fmt.Errorf("需要开启事务才能使用此查询")
 		return
 	}
+	if len(handler.TxKey) != 0 {
+		err = fmt.Errorf("一个事务中只能查询一次聚合")
+		return
+	}
 	//lock
 	handler.TxKey = Lock(id, aggType)
 	//在事务结束时,解锁
