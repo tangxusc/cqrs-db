@@ -2,18 +2,23 @@ package handler
 
 import (
 	"fmt"
-	"regexp"
+	"github.com/tangxusc/cqrs-db/pkg/db"
+	"github.com/xwb1989/sqlparser"
 	"testing"
 )
 
 func TestHandler(t *testing.T) {
 	variables := &selectAggregate{}
-	compile, e := regexp.Compile(`(?i).*\s*select \* from (\w+) where id='(\w+)'$`)
+
+	sqlString := `select * from User_Aggregate where id='xudslajsdfhsadhf'`
+	statement, e := sqlparser.Parse(sqlString)
 	if e != nil {
 		panic(e.Error())
 	}
-	variables.compile = compile
-
-	result, e := variables.Handler(`select * from UserAggregate where id='xudslajsdfhsadhf'`)
+	match := variables.Match(statement)
+	if !match {
+		panic("不匹配语句")
+	}
+	result, e := variables.Handler(sqlString, statement, &db.ConnHandler{})
 	fmt.Println(result, e)
 }

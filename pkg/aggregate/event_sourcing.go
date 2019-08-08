@@ -3,7 +3,9 @@ package aggregate
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/tangxusc/cqrs-db/pkg/db"
 	"github.com/tangxusc/cqrs-db/pkg/model"
 	"github.com/tangxusc/cqrs-db/pkg/proxy"
 	"github.com/tangxusc/cqrs-db/pkg/snapshot"
@@ -20,10 +22,15 @@ import (
 6,解锁(unlock)
 */
 //TODO:加入缓存
-func Sourcing(id string, aggType string) (data string, err error) {
+func Sourcing(id string, aggType string, handler *db.ConnHandler) (data string, err error) {
+	if !handler.TxBegin {
+		err = fmt.Errorf("需要开启事务才能使用此查询")
+		return
+	}
 	//lock
-	Lock(id, aggType)
-	defer UnLock(id, aggType)
+	handler.TxKey = Lock(id, aggType)
+	//在事务结束时,解锁
+	//TODO:超时,30秒后事务任然未解锁,则主动解锁
 	//查询快照
 	sh := loadSnapshot(id, aggType)
 	//根据快照的时间查询快照发生后的事件

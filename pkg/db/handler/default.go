@@ -4,16 +4,17 @@ import (
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/db"
 	"github.com/tangxusc/cqrs-db/pkg/proxy"
+	"github.com/xwb1989/sqlparser"
 )
 
 type defaultHandler struct {
 }
 
-func (d *defaultHandler) Match(query string) bool {
+func (d *defaultHandler) Match(stmt sqlparser.Statement) bool {
 	return true
 }
 
-func (d *defaultHandler) Handler(query string) (*mysql.Result, error) {
+func (d *defaultHandler) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
 	columnNames, columnValues, err := proxy.Proxy(query)
 	if err != nil {
 		return nil, err

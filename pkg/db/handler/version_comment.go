@@ -3,6 +3,8 @@ package handler
 import (
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/db"
+	"github.com/tangxusc/cqrs-db/pkg/db/parser"
+	"github.com/xwb1989/sqlparser"
 	"regexp"
 )
 
@@ -20,11 +22,21 @@ type versionComment struct {
 	compile *regexp.Regexp
 }
 
-func (s *versionComment) Match(query string) bool {
-	return s.compile.MatchString(query)
+func (s *versionComment) Match(stmt sqlparser.Statement) bool {
+	sel, ok := stmt.(*sqlparser.Select)
+	if ok {
+		result := parser.ParseSelect(sel)
+		columnLen := len(result.ColumnMap)
+		for key, _ := range result.ColumnMap {
+			if key == "@@version_comment" && columnLen == 1 {
+				return true
+			}
+		}
+	}
+	return false
 }
 
-func (s *versionComment) Handler(query string) (*mysql.Result, error) {
+func (s *versionComment) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
 	//mysql> select @@version_comment limit 1;
 	//	+------------------------------+
 	//	| @@version_comment            |

@@ -6,27 +6,34 @@ import (
 	"sync/atomic"
 )
 
-var locks = &sync.Map{}
+var Locks = &sync.Map{}
 
-type lockEntry struct {
-	value int32
+type LockEntry struct {
+	Value int32
+	Key   string
 }
 
-func (l *lockEntry) Lock() {
+func (l *LockEntry) Lock() {
 	for {
-		swapped := atomic.CompareAndSwapInt32(&l.value, 0, 1)
+		swapped := atomic.CompareAndSwapInt32(&l.Value, 0, 1)
 		if swapped {
 			return
 		}
 	}
 }
 
-func (l *lockEntry) Unlock() {
+func (l *LockEntry) Unlock() {
 	for {
-		swapped := atomic.CompareAndSwapInt32(&l.value, 1, 0)
+		swapped := atomic.CompareAndSwapInt32(&l.Value, 1, 0)
 		if swapped {
 			return
 		}
+	}
+}
+
+func (l *LockEntry) delete() {
+	if atomic.LoadInt32(&l.Value) == 0 {
+		Locks.Delete(l.Key)
 	}
 }
 
@@ -34,27 +41,36 @@ func (l *lockEntry) Unlock() {
 解锁聚合
 */
 func UnLock(id string, aggType string) {
-	defer locks.Delete(getKey(id, aggType))
-	value, ok := locks.Load(getKey(id, aggType))
+	UnLockWithKey(getKey(id, aggType))
+}
+
+func UnLockWithKey(key string) {
+	value, ok := Locks.Load(key)
 	if !ok {
 		return
 	}
-	entry := value.(*lockEntry)
+	entry := value.(*LockEntry)
+	defer func() {
+		entry.delete()
+	}()
 	entry.Unlock()
 }
 
 /*
 lock聚合,防止并发
 */
-func Lock(id string, aggType string) {
-	entry := &lockEntry{
-		value: 0,
+func Lock(id string, aggType string) string {
+	key := getKey(id, aggType)
+	entry := &LockEntry{
+		Value: 0,
+		Key:   key,
 	}
-	existLock, loaded := locks.LoadOrStore(getKey(id, aggType), entry)
+	existLock, loaded := Locks.LoadOrStore(key, entry)
 	if loaded {
-		entry = existLock.(*lockEntry)
+		entry = existLock.(*LockEntry)
 	}
 	entry.Lock()
+	return key
 }
 
 func getKey(id string, aggType string) string {

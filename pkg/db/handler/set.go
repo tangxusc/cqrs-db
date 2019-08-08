@@ -4,28 +4,22 @@ import (
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/db"
 	"github.com/tangxusc/cqrs-db/pkg/proxy"
-	"regexp"
+	"github.com/xwb1989/sqlparser"
 )
 
 func init() {
-	variables := &set{}
-	compile, e := regexp.Compile(`(?i).*\s*set .*$`)
-	if e != nil {
-		panic(e.Error())
-	}
-	variables.compile = compile
-	db.Handlers = append(db.Handlers, variables)
+	db.Handlers = append(db.Handlers, &set{})
 }
 
 type set struct {
-	compile *regexp.Regexp
 }
 
-func (s *set) Match(query string) bool {
-	return s.compile.MatchString(query)
+func (s *set) Match(stmt sqlparser.Statement) bool {
+	_, ok := stmt.(*sqlparser.Set)
+	return ok
 }
 
-func (s *set) Handler(query string) (*mysql.Result, error) {
+func (s *set) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
 	_, _, err := proxy.Proxy(query)
 	if err != nil {
 		return nil, err

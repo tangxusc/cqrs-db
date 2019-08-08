@@ -8,25 +8,40 @@ import (
 type SelectParseResult struct {
 	TableName   string
 	TableAsName string
-	ColumnMap   map[string]string
+	//名称,别名
+	ColumnMap map[string]string
+	Where     []string
 }
 
-func (s *SelectParseResult) ToString() string {
-	panic("implement me")
-}
-
-func parseSelect(stmt *sqlparser.Select) (result ParseResult) {
-	selectResult := &SelectParseResult{}
-	err := ParseTableName(stmt, selectResult)
+func ParseSelect(stmt *sqlparser.Select) (result *SelectParseResult) {
+	result = &SelectParseResult{}
+	err := ParseTableName(stmt, result)
 	if err != nil {
 		return
 	}
-	err = ParseColumnName(stmt, selectResult)
+	err = ParseColumnName(stmt, result)
 	if err != nil {
 		return
 	}
-	result = selectResult
+	err = ParseWhere(stmt, result)
+	if err != nil {
+		return
+	}
 	return
+}
+
+func ParseWhere(stmt *sqlparser.Select, result *SelectParseResult) error {
+	if stmt.Where == nil {
+		return nil
+	}
+	expr, ok := stmt.Where.Expr.(*sqlparser.ComparisonExpr)
+	if !ok {
+		return nil
+	}
+	val := expr.Right.(*sqlparser.SQLVal)
+	result.Where = make([]string, 1)
+	result.Where[0] = string(val.Val)
+	return nil
 }
 
 func ParseColumnName(selectVar *sqlparser.Select, result *SelectParseResult) (err error) {

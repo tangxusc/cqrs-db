@@ -6,47 +6,44 @@ import (
 	"github.com/tangxusc/cqrs-db/pkg/aggregate"
 	"github.com/tangxusc/cqrs-db/pkg/db"
 	"github.com/tangxusc/cqrs-db/pkg/db/parser"
-	"regexp"
+	"github.com/xwb1989/sqlparser"
+	"strings"
 )
 
 var ColumnsName = []string{"id", "agg_type", "data"}
 
 func init() {
-	variables := &selectAggregate{}
-	compile, e := regexp.Compile(`(?i).*\s*select\s+.+\s+from (\w+)_Aggregate\s*(?:\w+)*\s*where id='(\w+)'$`)
-	if e != nil {
-		panic(e.Error())
-	}
-	variables.compile = compile
-	db.Handlers = append(db.Handlers, variables)
+	db.Handlers = append(db.Handlers, &selectAggregate{})
 }
 
 type selectAggregate struct {
-	compile *regexp.Regexp
 }
 
-func (s *selectAggregate) Match(query string) bool {
-	return s.compile.MatchString(query)
+func (s *selectAggregate) Match(stmt sqlparser.Statement) bool {
+	sel, ok := stmt.(*sqlparser.Select)
+	if !ok {
+		return false
+	}
+	result := parser.ParseSelect(sel)
+	if len(result.Where) != 1 {
+		return false
+	}
+	//table名称为 xxx_aggregate格式
+	return strings.HasSuffix(strings.ToLower(result.TableName), "_aggregate")
 }
 
 //example: select id as c1 , agg_type as c2, data as c3 from test_aggregate a1 where id='1'
-func (s *selectAggregate) Handler(query string) (*mysql.Result, error) {
-	result, e := parser.ParseSql(query)
-	if e != nil {
-		return nil, e
-	}
-	parseResult := result.(*parser.SelectParseResult)
+//example: select * from test_aggregate a1 where id='1'
+//example: select * from test_aggregate where id='1'
+func (s *selectAggregate) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
+	parseResult := parser.ParseSelect(stmt.(*sqlparser.Select))
 	for key, _ := range parseResult.ColumnMap {
 		if key != ColumnsName[0] && key != ColumnsName[1] && key != ColumnsName[2] {
 			return nil, fmt.Errorf("不支持的列名称:%v", key)
 		}
 	}
-
-	id, aggType, e := ParseIdAndType(s, query)
-	if e != nil {
-		return nil, e
-	}
-	data, e := aggregate.Sourcing(id, aggType)
+	id, aggType := ParseIdAndType(parseResult)
+	data, e := aggregate.Sourcing(id, aggType, handler)
 	if e != nil {
 		return nil, e
 	}
@@ -66,20 +63,16 @@ func (s *selectAggregate) Handler(query string) (*mysql.Result, error) {
 }
 
 func getColumn(result *parser.SelectParseResult) []string {
-	strings := make([]string, 3)
-	for key, _ := range strings {
-		strings[key] = result.ColumnMap[ColumnsName[key]]
+	returns := make([]string, 3)
+	for key, _ := range returns {
+		returns[key] = result.ColumnMap[ColumnsName[key]]
 	}
-	return strings
+	return returns
 }
 
-func ParseIdAndType(s *selectAggregate, query string) (id string, aggType string, err error) {
-	subMatch := s.compile.FindStringSubmatch(query)
-	if len(subMatch) != 3 {
-		err = fmt.Errorf("sql语句错误,请传入正确的参数")
-		return
-	}
-	id = subMatch[2]
-	aggType = subMatch[1]
+func ParseIdAndType(result *parser.SelectParseResult) (id string, aggType string) {
+	id = result.Where[0]
+	aggType = strings.ReplaceAll(result.TableName, "_aggregate", "")
+	aggType = strings.ReplaceAll(aggType, "_Aggregate", "")
 	return
 }

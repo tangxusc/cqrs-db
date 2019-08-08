@@ -59,7 +59,7 @@ func TestSourcing(t *testing.T) {
 	//insert into test.event
 	//values ('4', 'E1', '1', 'A1', str_to_date('2018-05-05', '%Y-%m-%d %H'), '{"name":"test3","age":null}');
 
-	data, err := Sourcing("1", "A1")
+	data, err := Sourcing("1", "A1", handler)
 	fmt.Println("func1", data, err)
 	time.Sleep(time.Second * 20)
 	fmt.Println("func1 end")
@@ -119,7 +119,7 @@ func TestSourcingWithSnapshot(t *testing.T) {
 	//insert into test.snapshot
 	//values ('1', '1', 'A1', str_to_date('2018-05-03', '%Y-%m-%d %H'), '{"name":"test1","age":10}');
 
-	data, err := Sourcing("1", "A1")
+	data, err := Sourcing("1", "A1", handler)
 	fmt.Println("func1", data, err)
 	time.Sleep(time.Second * 20)
 	fmt.Println("func1 end")
