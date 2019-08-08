@@ -24,7 +24,7 @@ import (
 //TODO:加入缓存
 func Sourcing(id string, aggType string, handler *db.ConnHandler) (data string, err error) {
 	if !handler.TxBegin {
-		err = fmt.Errorf("需要开启事务才能使用此查询")
+		err = fmt.Errorf("需要开启事务才能查询聚合")
 		return
 	}
 	if len(handler.TxKey) != 0 {

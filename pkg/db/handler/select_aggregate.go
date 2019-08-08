@@ -63,6 +63,9 @@ func (s *selectAggregate) Handler(query string, stmt sqlparser.Statement, handle
 }
 
 func getColumn(result *parser.SelectParseResult) []string {
+	if len(result.ColumnMap) == 0 {
+		return ColumnsName
+	}
 	returns := make([]string, 3)
 	for key, _ := range returns {
 		returns[key] = result.ColumnMap[ColumnsName[key]]
