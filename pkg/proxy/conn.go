@@ -136,9 +136,13 @@ func Proxy(query string) (columnNames []string, columnValues [][]interface{}, er
 		},
 		func(row []interface{}) {
 			i := make([]interface{}, len(row))
-			//TODO:select now() from dual;对于time类型的转换
-			//ERROR 1105 (HY000): unsupport type time.Time for resultset
 			for key, _ := range row {
+				v1 := rowOrigin[key]
+				switch v1.(type) {
+				case time.Time:
+					i[key] = v1.(time.Time).String()
+					continue
+				}
 				i[key] = rowOrigin[key]
 			}
 			columnValues = append(columnValues, i)
