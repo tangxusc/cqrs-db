@@ -36,25 +36,47 @@ func CloseConn() {
 
 func Insert(sqlString string, param ...interface{}) error {
 	logrus.Debugf("[proxy]Insert:%s,param:%v", sqlString, param)
+	return Tx(func(tx *sql.Tx) error {
+		stmt, e := tx.Prepare(sqlString)
+		if e != nil {
+			return e
+		}
+		defer stmt.Close()
+		_, e = stmt.Exec(param...)
+		return e
+	})
+}
+
+func Inserts(sqlString string, params [][]interface{}) error {
+	logrus.Debugf("[proxy]Inserts:%s,params:%v", sqlString, params)
+	return Tx(func(tx *sql.Tx) error {
+		stmt, e := tx.Prepare(sqlString)
+		if e != nil {
+			return e
+		}
+		defer stmt.Close()
+		for _, value := range params {
+			_, e := stmt.Exec(value...)
+			if e != nil {
+				return e
+			}
+		}
+		return nil
+	})
+}
+
+func Tx(f func(tx *sql.Tx) error) error {
+	logrus.Debugf("[proxy]Tx:%v", f)
 	tx, e := db.Begin()
 	if e != nil {
 		return e
 	}
-	stmt, e := tx.Prepare(sqlString)
+	e = f(tx)
 	if e != nil {
+		defer tx.Rollback()
 		return e
 	}
-	defer stmt.Close()
-	_, e = stmt.Exec(param...)
-	if e != nil {
-		e = tx.Rollback()
-		if e != nil {
-			return e
-		}
-		return e
-	}
-	e = tx.Commit()
-	return e
+	return tx.Commit()
 }
 
 func QueryOne(sqlString string, scan []interface{}, param ...interface{}) error {

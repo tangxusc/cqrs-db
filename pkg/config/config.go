@@ -27,7 +27,7 @@ func BindParameter(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&Instance.Debug, debugArgName, "v", false, "debug mod")
 	cmd.PersistentFlags().StringVarP(&Instance.Db.Port, "db-port", "p", "3307", "数据库端口")
 	cmd.PersistentFlags().StringVarP(&Instance.Db.Username, "db-Username", "u", "root", "用户名")
-	cmd.PersistentFlags().StringVarP(&Instance.Db.Password, "db-Password", "d", "", "密码")
+	cmd.PersistentFlags().StringVarP(&Instance.Db.Password, "db-Password", "d", "123456", "密码")
 
 	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Address, "proxy-address", "", "172.17.0.2", "proxy数据库连接地址")
 	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Port, "proxy-port", "", "3306", "proxy数据库端口")
