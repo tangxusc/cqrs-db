@@ -5,8 +5,7 @@ import (
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/db"
 	"github.com/tangxusc/cqrs-db/pkg/db/parser"
-	"github.com/tangxusc/cqrs-db/pkg/proxy"
-	"github.com/tangxusc/cqrs-db/pkg/util"
+	"github.com/tangxusc/cqrs-db/pkg/event"
 	"github.com/xwb1989/sqlparser"
 	"strings"
 )
@@ -53,7 +52,7 @@ func (s *insertEvent) Handler(query string, stmt sqlparser.Statement, handler *d
 		return nil, err
 	}
 	//3,保存event
-	err = SaveEvent(result)
+	err = event.SaveEvent(result)
 	if err != nil {
 		return nil, err
 	}
@@ -61,20 +60,4 @@ func (s *insertEvent) Handler(query string, stmt sqlparser.Statement, handler *d
 	//TODO:5,leader grpc 推送event
 
 	return nil, err
-}
-
-func SaveEvent(result *parser.InsertParseResult) error {
-	if len(result.Values) == 0 {
-		return fmt.Errorf("值不能为空")
-	}
-	if len(result.Columns) == 0 {
-		result.Columns = Columns
-	} else {
-		result.Columns = append(result.Columns, "id")
-	}
-	columnsSql := strings.Join(result.Columns, ",")
-	for key, vValue := range result.Values {
-		result.Values[key] = append(vValue, util.GenerateUuid())
-	}
-	return proxy.Inserts(`insert into event(`+columnsSql+`) values (?,?,?,?,?,?)`, result.Values)
 }
