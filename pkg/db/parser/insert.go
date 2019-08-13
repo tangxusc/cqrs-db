@@ -29,7 +29,7 @@ func ParseInsert(insert *sqlparser.Insert) (result *InsertParseResult, err error
 		for key, value := range exprs {
 			val, ok := value.(*sqlparser.SQLVal)
 			if !ok {
-				err = fmt.Errorf("解析sql错误")
+				err = fmt.Errorf("只支持值,不支持其他表达式")
 				return
 			}
 			resultVal[key] = val.Val
