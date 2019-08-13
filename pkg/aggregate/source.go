@@ -62,6 +62,10 @@ func (source *Source) Sourcing(handler *db.ConnHandler) (data string, err error)
 	if err != nil {
 		return
 	}
+	source.Data = data
+	if len(events) > 0 {
+		source.LastUpdateTime = events[len(events)-1].CreateTime
+	}
 	go snapshot.Save(source.Id, source.AggType, data, events, time.Now())
 	return
 }

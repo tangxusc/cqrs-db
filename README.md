@@ -84,6 +84,8 @@ commit;
 select * from locks_agg;
 #查询聚合
 select * from agg_info;
+#保存事件
+insert into event_aggregate(type, agg_id, agg_type, create_time, data) values ('E1', '1', 'A1', '2018-08-02', '{"name":"test1"}');
 ```
 
 ### 6.mysql本身的表查询
