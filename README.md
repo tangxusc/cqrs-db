@@ -70,7 +70,7 @@ go run main.go --debug true --proxy-Database=test --proxy-Password=123456 --prox
 
 ```shell
 #默认proxy启动在3307端口,默认用户名root,无密码
-mysql -uroot -P3307 -h 127.0.0.1
+mysql -uroot -P3307 -h 127.0.0.1 -p123456
 ```
 
 ### 5.proxy支持的查询
@@ -82,6 +82,8 @@ select id as c1, data as c3, agg_type as c2 from a1_aggregate a1 where id = '1';
 commit;
 #查询聚合的锁
 select * from locks_agg;
+#查询聚合
+select * from agg_info;
 ```
 
 ### 6.mysql本身的表查询
