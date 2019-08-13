@@ -43,8 +43,8 @@ func (s *transaction) Handler(query string, stmt sqlparser.Statement, handler *d
 		if !handler.TxBegin {
 			return nil, fmt.Errorf("未开启事务,无法提交事务")
 		}
+		aggregate.GetSourceByKey(handler.TxKey)
 		handler.TxBegin = false
-		aggregate.UnLockWithKey(handler.TxKey)
 		handler.TxKey = ""
 	}
 	return nil, nil

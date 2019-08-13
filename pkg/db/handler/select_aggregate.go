@@ -43,7 +43,11 @@ func (s *selectAggregate) Handler(query string, stmt sqlparser.Statement, handle
 		}
 	}
 	id, aggType := ParseIdAndType(parseResult)
-	data, e := aggregate.Sourcing(id, aggType, handler)
+	source, e := aggregate.GetSource(id, aggType, handler)
+	if e != nil {
+		return nil, e
+	}
+	data, e := source.Sourcing(handler)
 	if e != nil {
 		return nil, e
 	}

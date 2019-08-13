@@ -26,9 +26,11 @@ func (s *selectLocks) Handler(query string, stmt sqlparser.Statement, handler *d
 	var resultset *mysql.Resultset
 	var err error
 	rows := make([][]interface{}, 0)
-	aggregate.Locks.Range(func(key, value interface{}) bool {
-		entry := value.(*aggregate.LockEntry)
-		rows = append(rows, []interface{}{entry.Key, entry.Value})
+	aggregate.SourceMap.Range(func(key, value interface{}) bool {
+		entry := value.(*aggregate.Source)
+		if entry.Locked() {
+			rows = append(rows, []interface{}{entry.Key, "locked"})
+		}
 		return true
 	})
 
