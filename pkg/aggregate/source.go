@@ -20,8 +20,8 @@ type Source struct {
 	locked         int32
 	terminator     *time.Timer
 	lifeTime       time.Duration
-	data           string
-	lastUpdateTime time.Time
+	Data           string
+	LastUpdateTime time.Time
 }
 
 /*
@@ -73,16 +73,16 @@ func (source *Source) Sourcing(handler *db.ConnHandler) (data string, err error)
 */
 func loadData(source *Source) (string, time.Time) {
 	var t = time.Time{}
-	if !source.lastUpdateTime.IsZero() {
-		t = source.lastUpdateTime
+	if !source.LastUpdateTime.IsZero() {
+		t = source.LastUpdateTime
 	}
 	snap := loadSnapshot(source.Id, source.AggType, t)
 	if snap != nil && !snap.CreateTime.IsZero() {
-		source.data = snap.Data
-		source.lastUpdateTime = snap.CreateTime
+		source.Data = snap.Data
+		source.LastUpdateTime = snap.CreateTime
 		return snap.Data, snap.CreateTime
 	}
-	return source.data, source.lastUpdateTime
+	return source.Data, source.LastUpdateTime
 }
 
 func (source *Source) lock() {
