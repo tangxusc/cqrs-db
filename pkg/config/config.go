@@ -38,6 +38,9 @@ func BindParameter(cmd *cobra.Command) {
 	cmd.PersistentFlags().IntVarP(&Instance.Proxy.MaxOpen, "proxy-MaxOpen", "", 5, "proxy数据库最大连接数")
 	cmd.PersistentFlags().IntVarP(&Instance.Proxy.MaxIdle, "proxy-MaxIdle", "", 5, "proxy数据库最大等待数量")
 
+	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.Url, "pulsar-url", "", "", "pulsar消息中间件地址")
+	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.TopicName, "pulsar-topic-name", "", "cqrs-db", "pulsar消息中间件主题名称")
+
 	_ = viper.BindPFlag(debugArgName, cmd.PersistentFlags().Lookup(debugArgName))
 	_ = viper.BindPFlag("db-port", cmd.PersistentFlags().Lookup("db-port"))
 	_ = viper.BindPFlag("db-Username", cmd.PersistentFlags().Lookup("db-Username"))
@@ -51,12 +54,21 @@ func BindParameter(cmd *cobra.Command) {
 	_ = viper.BindPFlag("proxy-LifeTime", cmd.PersistentFlags().Lookup("proxy-LifeTime"))
 	_ = viper.BindPFlag("proxy-MaxOpen", cmd.PersistentFlags().Lookup("proxy-MaxOpen"))
 	_ = viper.BindPFlag("proxy-MaxIdle", cmd.PersistentFlags().Lookup("proxy-MaxIdle"))
+
+	_ = viper.BindPFlag("pulsar-url", cmd.PersistentFlags().Lookup("pulsar-url"))
+	_ = viper.BindPFlag("pulsar-topic-name", cmd.PersistentFlags().Lookup("pulsar-topic-name"))
+}
+
+type PulsarConfig struct {
+	Url       string
+	TopicName string
 }
 
 type Config struct {
-	Debug bool
-	Db    *DbConfig
-	Proxy *ProxyConfig
+	Debug  bool
+	Db     *DbConfig
+	Proxy  *ProxyConfig
+	Pulsar *PulsarConfig
 }
 
 type DbConfig struct {
@@ -66,8 +78,9 @@ type DbConfig struct {
 }
 
 var Instance = &Config{
-	Db:    &DbConfig{},
-	Proxy: &ProxyConfig{},
+	Db:     &DbConfig{},
+	Proxy:  &ProxyConfig{},
+	Pulsar: &PulsarConfig{},
 }
 
 type ProxyConfig struct {

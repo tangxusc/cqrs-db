@@ -6,13 +6,15 @@ import (
 )
 
 type InsertParseResult struct {
-	Columns []string
-	Values  [][]interface{}
+	Columns   []string
+	Values    [][]interface{}
+	ValueMaps map[string][]interface{}
 }
 
 func ParseInsert(insert *sqlparser.Insert) (result *InsertParseResult, err error) {
 	result = &InsertParseResult{}
 	result.Columns = make([]string, len(insert.Columns))
+	result.ValueMaps = make(map[string][]interface{}, len(insert.Columns))
 	for key, value := range insert.Columns {
 		result.Columns[key] = value.Lowered()
 	}
@@ -35,6 +37,9 @@ func ParseInsert(insert *sqlparser.Insert) (result *InsertParseResult, err error
 			resultVal[key] = val.Val
 		}
 		result.Values[itemKey] = resultVal
+	}
+	for k, v := range result.Columns {
+		result.ValueMaps[v] = result.Values[k]
 	}
 	return
 }

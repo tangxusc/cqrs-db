@@ -1,10 +1,8 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/db"
-	"github.com/tangxusc/cqrs-db/pkg/db/parser"
 	"github.com/tangxusc/cqrs-db/pkg/event"
 	"github.com/xwb1989/sqlparser"
 	"strings"
@@ -33,31 +31,6 @@ func (s *insertEvent) Match(stmt sqlparser.Statement) bool {
 	return true
 }
 
-/*
-1,检查sql
-2,保存event到数据库
-3,go 发送到mq
-3,go grpc推送event
-4,返回保存成功
-*/
 func (s *insertEvent) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
-	var err error
-	//1,必须在一个事务中
-	if !handler.TxBegin {
-		return nil, fmt.Errorf("必须在事务中才能发布事件")
-	}
-	//2,分析出数据
-	result, err := parser.ParseInsert(stmt.(*sqlparser.Insert))
-	if err != nil {
-		return nil, err
-	}
-	//3,保存event
-	err = event.SaveEvent(result)
-	if err != nil {
-		return nil, err
-	}
-	//TODO:4,发送到mq
-	//TODO:5,leader grpc 推送event
-
-	return nil, err
+	return event.Handler(query, stmt, handler)
 }
