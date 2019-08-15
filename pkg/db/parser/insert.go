@@ -34,12 +34,17 @@ func ParseInsert(insert *sqlparser.Insert) (result *InsertParseResult, err error
 				err = fmt.Errorf("只支持值,不支持其他表达式")
 				return
 			}
-			resultVal[key] = val.Val
+			resultVal[key] = []byte(val.Val)
 		}
 		result.Values[itemKey] = resultVal
 	}
-	for k, v := range result.Columns {
-		result.ValueMaps[v] = result.Values[k]
+	valueLen := len(result.Values)
+	for ck, cv := range result.Columns {
+		item := make([]interface{}, 0, valueLen)
+		for _, vv := range result.Values {
+			item = append(item, vv[ck])
+		}
+		result.ValueMaps[cv] = item
 	}
 	return
 }

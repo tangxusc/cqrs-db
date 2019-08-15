@@ -15,7 +15,7 @@ func Save(aggId, aggType string, data string, events []*model.Event, now time.Ti
 }
 
 func SaveSnapshot(aggId string, aggType string, data string, time time.Time) {
-	e := proxy.Insert(`insert into snapshot(id, agg_id, agg_type, create_time, data) values (?, ?, ?, ?, ?)`, util.GenerateUuid(), aggId, aggType, time, data)
+	e := proxy.Exec(`insert into snapshot(id, agg_id, agg_type, create_time, data) values (?, ?, ?, ?, ?)`, util.GenerateUuid(), aggId, aggType, time, data)
 	if e != nil {
 		logrus.Warnf("[snapshot]保存快照失败,聚合:%v:%v,错误:%v", aggType, aggId, e)
 	}

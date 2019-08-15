@@ -7,6 +7,7 @@ import (
 	"github.com/tangxusc/cqrs-db/pkg/config"
 	"github.com/tangxusc/cqrs-db/pkg/db"
 	_ "github.com/tangxusc/cqrs-db/pkg/db/handler"
+	"github.com/tangxusc/cqrs-db/pkg/event"
 	"github.com/tangxusc/cqrs-db/pkg/proxy"
 	"math/rand"
 	"os"
@@ -25,6 +26,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			go db.Start(ctx)
 			go proxy.InitConn(ctx)
 			defer proxy.CloseConn()
+			go event.Start(ctx)
+			defer event.Close()
 
 			<-ctx.Done()
 		},

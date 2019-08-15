@@ -34,7 +34,7 @@ func CloseConn() {
 	}
 }
 
-func Insert(sqlString string, param ...interface{}) error {
+func Exec(sqlString string, param ...interface{}) error {
 	logrus.Debugf("[proxy]Insert:%s,param:%v", sqlString, param)
 	return Tx(func(tx *sql.Tx) error {
 		stmt, e := tx.Prepare(sqlString)
@@ -47,7 +47,7 @@ func Insert(sqlString string, param ...interface{}) error {
 	})
 }
 
-func Inserts(sqlString string, params [][]interface{}) error {
+func Execs(sqlString string, params [][]interface{}) error {
 	logrus.Debugf("[proxy]Inserts:%s,params:%v", sqlString, params)
 	return Tx(func(tx *sql.Tx) error {
 		stmt, e := tx.Prepare(sqlString)

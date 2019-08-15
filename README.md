@@ -8,10 +8,11 @@ cqrs-db通过代理mysql的协议,实现在proxy层中完成cqrs中的事件溯�
 
 ## 运行
 
-### 1.启动mysql
+### 1.启动mysql&pulsar
 
 ```shell
 docker run --rm -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
+docker run --rm -it -p 6650:6650 -p 8080:8080 apachepulsar/pulsar:2.3.2 bin/pulsar standalone
 ```
 
 ### 2.初始化mysql
@@ -27,6 +28,7 @@ create table test.event
     agg_type    varchar(36)  null,
     create_time timestamp    null,
     data        varchar(500) null,
+    mq_status   varchar(50)  null,
     constraint event_pk
         primary key (id)
 );
@@ -43,13 +45,13 @@ create table test.snapshot
 );
 
 insert into test.event
-values ('1', 'E1', '1', 'A1', str_to_date('2018-05-02', '%Y-%m-%d %H'), '{"name":"test1"}');
+values ('1', 'E1', '1', 'A1', str_to_date('2018-05-02', '%Y-%m-%d %H'), '{"name":"test1"}', 'NotSend');
 insert into test.event
-values ('2', 'E1', '1', 'A1', str_to_date('2018-05-03', '%Y-%m-%d %H'), '{"age":10}');
+values ('2', 'E1', '1', 'A1', str_to_date('2018-05-03', '%Y-%m-%d %H'), '{"age":10}', 'NotSend');
 insert into test.event
-values ('3', 'E1', '1', 'A1', str_to_date('2018-05-04', '%Y-%m-%d %H'), '{"name":"test2"}');
+values ('3', 'E1', '1', 'A1', str_to_date('2018-05-04', '%Y-%m-%d %H'), '{"name":"test2"}', 'NotSend');
 insert into test.event
-values ('4', 'E1', '1', 'A1', str_to_date('2018-05-05', '%Y-%m-%d %H'), '{"name":"test3","age":null}');
+values ('4', 'E1', '1', 'A1', str_to_date('2018-05-05', '%Y-%m-%d %H'), '{"name":"test3","age":null}', 'NotSend');
 
 insert into test.snapshot
 values ('1', '1', 'A1', str_to_date('2018-05-03', '%Y-%m-%d %H'), '{"name":"test1","age":10}');
@@ -69,7 +71,7 @@ go run main.go --debug true --proxy-Database=test --proxy-Password=123456 --prox
 ### 4.使用mysql客户端连接proxy
 
 ```shell
-#默认proxy启动在3307端口,默认用户名root,无密码
+#默认proxy启动在3307端口,默认用户名root,密码:123456
 mysql -uroot -P3307 -h 127.0.0.1 -p123456
 ```
 
@@ -85,7 +87,7 @@ select * from locks_agg;
 #查询聚合
 select * from agg_info;
 #保存事件
-insert into event_aggregate(type, agg_id, agg_type, create_time, data) values ('E1', '1', 'A1', '2018-08-02', '{"name":"test1"}');
+insert into event_aggregate(type, agg_id, agg_type, create_time, data) values ('E1', '1', 'A1', '2018-08-02 12:00:00', '{"name":"test1"}'),('E1', '1', 'A1', '2018-08-03 14:00:00', '{"name":"test5"}');
 ```
 
 ### 6.mysql本身的表查询

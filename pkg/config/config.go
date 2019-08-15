@@ -38,7 +38,7 @@ func BindParameter(cmd *cobra.Command) {
 	cmd.PersistentFlags().IntVarP(&Instance.Proxy.MaxOpen, "proxy-MaxOpen", "", 5, "proxy数据库最大连接数")
 	cmd.PersistentFlags().IntVarP(&Instance.Proxy.MaxIdle, "proxy-MaxIdle", "", 5, "proxy数据库最大等待数量")
 
-	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.Url, "pulsar-url", "", "", "pulsar消息中间件地址")
+	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.Url, "pulsar-url", "", "pulsar://localhost:6650", "pulsar消息中间件地址")
 	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.TopicName, "pulsar-topic-name", "", "cqrs-db", "pulsar消息中间件主题名称")
 
 	_ = viper.BindPFlag(debugArgName, cmd.PersistentFlags().Lookup(debugArgName))
