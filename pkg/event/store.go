@@ -18,7 +18,6 @@ func SaveEvent(events []Event) error {
 			if e != nil {
 				return e
 			}
-			fmt.Println(v.Id(), v.EventType(), v.AggId(), v.AggType(), v.CreateTime(), v.Data(), NotSend)
 			_, e = stmt.Exec(v.Id(), v.EventType(), v.AggId(), v.AggType(), v.CreateTime(), v.Data(), NotSend)
 			if e != nil {
 				return e

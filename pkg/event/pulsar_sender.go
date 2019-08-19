@@ -64,7 +64,7 @@ func (p *PulsarSender) SendEvents(events []Event) error {
 		e := p.sendEvent(value)
 		if e != nil {
 			logrus.Errorf("[event]发送事件错误,错误:%v", e)
-			break
+			return e
 		}
 	}
 	return nil

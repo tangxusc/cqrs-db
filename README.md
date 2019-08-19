@@ -87,7 +87,9 @@ select * from locks_agg;
 #查询聚合
 select * from agg_info;
 #保存事件
+begin;
 insert into event_aggregate(type, agg_id, agg_type, create_time, data) values ('E1', '1', 'A1', '2018-08-02 12:00:00', '{"name":"test1"}'),('E1', '1', 'A1', '2018-08-03 14:00:00', '{"name":"test5"}');
+commit;
 ```
 
 ### 6.mysql本身的表查询
@@ -107,5 +109,6 @@ github.com/sirupsen/logrus
 github.com/spf13/cobra
 github.com/spf13/viper
 github.com/xwb1989/sqlparser
+github.com/apache/pulsar/pulsar-client-go
 ```
 

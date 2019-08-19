@@ -22,10 +22,15 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			rand.Seed(time.Now().Unix())
 			config.InitLog()
-
+			//启动数据库
 			go db.Start(ctx)
+			//连接代理数据库
 			go proxy.InitConn(ctx)
 			defer proxy.CloseConn()
+			//启动事件恢复机制
+			go event.RecoveryEvent(ctx)
+			defer event.Stop()
+			//启动事件发送
 			go event.Start(ctx)
 			defer event.Close()
 
