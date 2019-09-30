@@ -2,10 +2,13 @@ package handler
 
 import (
 	"github.com/siddontang/go-mysql/mysql"
+	"github.com/tangxusc/cqrs-db/pkg/core"
 	"github.com/tangxusc/cqrs-db/pkg/db"
-	"github.com/tangxusc/cqrs-db/pkg/event"
+	"github.com/tangxusc/cqrs-db/pkg/db/parser"
+	"github.com/tangxusc/cqrs-db/pkg/util"
 	"github.com/xwb1989/sqlparser"
 	"strings"
+	"time"
 )
 
 var Columns = []string{"id", "type", "agg_id", "agg_type", "create_time", "data"}
@@ -32,5 +35,32 @@ func (s *insertEvent) Match(stmt sqlparser.Statement) bool {
 }
 
 func (s *insertEvent) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
-	return event.Handler(query, stmt, handler)
+	result, e := parser.ParseInsert(stmt.(*sqlparser.Insert))
+	if e != nil {
+		return nil, e
+	}
+	events, e := BuildEvents(result)
+	if e != nil {
+		return nil, e
+	}
+	return nil, events.SaveAndSend()
+}
+
+func BuildEvents(parseResult *parser.InsertParseResult) (events core.Events, e error) {
+	events = make([]*core.Event, len(parseResult.Values))
+	for k := range parseResult.Values {
+		id := util.GenerateUuid()
+		eventType := string(parseResult.ValueMaps["type"][k].([]byte))
+		aggId := string(parseResult.ValueMaps["agg_id"][k].([]byte))
+		aggType := string(parseResult.ValueMaps["agg_type"][k].([]byte))
+		createTimeString := string(parseResult.ValueMaps["create_time"][k].([]byte))
+		var createTime time.Time
+		createTime, e = time.Parse(`2006-01-02 15:04:05`, createTimeString)
+		if e != nil {
+			return
+		}
+		data := string(parseResult.ValueMaps["data"][k].([]byte))
+		events[k] = core.NewEvent(id, eventType, aggId, aggType, createTime, data)
+	}
+	return events, nil
 }

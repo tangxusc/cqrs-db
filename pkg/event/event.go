@@ -116,10 +116,3 @@ var SenderImpl Sender
 type Sender interface {
 	SendEvents([]Event) error
 }
-
-type MqStatus string
-
-const (
-	NotSend MqStatus = "NotSend"
-	Sent    MqStatus = "Sent"
-)

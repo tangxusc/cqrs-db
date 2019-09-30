@@ -149,7 +149,7 @@ func Proxy(query string) (columnNames []string, columnValues [][]interface{}, er
 			if result == nil {
 				result = make([]interface{}, len(types))
 				rowOrigin = make([]interface{}, 0, len(types))
-				for key, _ := range types {
+				for key := range types {
 					rowOrigin = append(rowOrigin, temp)
 					result[key] = &rowOrigin[key]
 				}
@@ -158,7 +158,7 @@ func Proxy(query string) (columnNames []string, columnValues [][]interface{}, er
 		},
 		func(row []interface{}) {
 			i := make([]interface{}, len(row))
-			for key, _ := range row {
+			for key := range row {
 				v1 := rowOrigin[key]
 				switch v1.(type) {
 				case time.Time:

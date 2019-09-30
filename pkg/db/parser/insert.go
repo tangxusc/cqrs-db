@@ -34,7 +34,7 @@ func ParseInsert(insert *sqlparser.Insert) (result *InsertParseResult, err error
 				err = fmt.Errorf("只支持值,不支持其他表达式")
 				return
 			}
-			resultVal[key] = []byte(val.Val)
+			resultVal[key] = val.Val
 		}
 		result.Values[itemKey] = resultVal
 	}
