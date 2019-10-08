@@ -23,6 +23,7 @@ func (s *EventSenderImpl) Send(event *core.Event) error {
 		logrus.Errorf("[event]发送事件错误,错误:%v", e)
 		return e
 	}
+	return nil
 }
 
 func NewSender(ctx context.Context) (sender *EventSenderImpl, e error) {

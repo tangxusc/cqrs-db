@@ -1,6 +1,8 @@
 package core
 
-import "time"
+import (
+	"time"
+)
 
 /*
 快照
@@ -9,6 +11,7 @@ type Snapshot struct {
 	Id         string
 	AggId      string
 	AggType    string
-	CreateTime time.Time
+	CreateTime *time.Time
 	Data       string
+	Version    int
 }

@@ -22,6 +22,7 @@ type Event struct {
 	CreateTime time.Time
 	Data       string
 	Status     MqStatus
+	Version    int
 }
 
 func (event *Event) SuccessSend() error {
@@ -36,14 +37,10 @@ func NewEvent(id string, eventType string, aggId string, aggType string, createT
 type Events []*Event
 
 func (events Events) SaveAndSend() error {
-	//保存event
-	err := eventRepository.SaveEvents(events)
-	if err != nil {
-		return err
-	}
 	//获取aggregate,并放入聚合发送队列,再由聚合发送出
 	event := events[0]
 	agg := aggregateCache.Get(event.AggId, event.AggType)
+
 	return agg.PutSendChan(events)
 }
 

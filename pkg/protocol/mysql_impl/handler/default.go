@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/siddontang/go-mysql/mysql"
-	"github.com/tangxusc/cqrs-db/pkg/db"
-	"github.com/tangxusc/cqrs-db/pkg/proxy"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/proxy"
 	"github.com/xwb1989/sqlparser"
 )
 
@@ -14,7 +14,7 @@ func (d *defaultHandler) Match(stmt sqlparser.Statement) bool {
 	return true
 }
 
-func (d *defaultHandler) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
+func (d *defaultHandler) Handler(query string, stmt sqlparser.Statement, handler *mysql_impl.ConnHandler) (*mysql.Result, error) {
 	columnNames, columnValues, err := proxy.Proxy(query)
 	if err != nil {
 		return nil, err
@@ -33,5 +33,5 @@ func (d *defaultHandler) Handler(query string, stmt sqlparser.Statement, handler
 }
 
 func init() {
-	db.DefaultHandler = &defaultHandler{}
+	mysql_impl.DefaultHandler = &defaultHandler{}
 }

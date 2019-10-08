@@ -6,11 +6,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tangxusc/cqrs-db/pkg/config"
 	"github.com/tangxusc/cqrs-db/pkg/core"
-	"github.com/tangxusc/cqrs-db/pkg/db"
-	_ "github.com/tangxusc/cqrs-db/pkg/db/handler"
-	"github.com/tangxusc/cqrs-db/pkg/event"
 	"github.com/tangxusc/cqrs-db/pkg/mq"
-	"github.com/tangxusc/cqrs-db/pkg/repository"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/proxy"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/repository"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -24,16 +23,21 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rand.Seed(time.Now().Unix())
 			config.InitLog()
-			//启动数据库
-			go db.Start(ctx)
-
 			//连接代理数据库
 			conn, e := repository.InitConn(ctx)
 			if e != nil {
 				return e
 			}
 			defer conn.Close()
+
+			//启动mysql协议
+			go mysql_impl.Start(ctx)
+			proxy.SetConn(conn)
+
 			core.SetEventStore(repository.NewEventStoreImpl(conn))
+			core.SetSnapshotStore(repository.NewSnapshotStoreImpl(conn))
+			core.SetSnapshotSaveStrategy(repository.NewCountStrategy(100))
+			//TODO:AggregateManager
 
 			sender, e := mq.NewSender(ctx)
 			if e != nil {
@@ -42,15 +46,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			defer sender.Close()
 			core.SetEventSender(sender)
 
-			//go proxy.InitConn(ctx)
-			//defer proxy.CloseConn()
 			//启动事件恢复机制
 			core.NewRestorer().Start(ctx)
-			//go event.RecoveryEvent(ctx)
-			//defer event.Stop()
-			//启动事件发送
-			go event.Start(ctx)
-			defer event.Close()
 
 			<-ctx.Done()
 			return nil

@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/siddontang/go-mysql/mysql"
-	"github.com/tangxusc/cqrs-db/pkg/db"
-	"github.com/tangxusc/cqrs-db/pkg/db/parser"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/parser"
 	"github.com/xwb1989/sqlparser"
 	"regexp"
 )
@@ -15,7 +15,7 @@ func init() {
 		panic(e.Error())
 	}
 	variables.compile = compile
-	db.Handlers = append(db.Handlers, variables)
+	mysql_impl.Handlers = append(mysql_impl.Handlers, variables)
 }
 
 type versionComment struct {
@@ -36,7 +36,7 @@ func (s *versionComment) Match(stmt sqlparser.Statement) bool {
 	return false
 }
 
-func (s *versionComment) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
+func (s *versionComment) Handler(query string, stmt sqlparser.Statement, handler *mysql_impl.ConnHandler) (*mysql.Result, error) {
 	//mysql> select @@version_comment limit 1;
 	//	+------------------------------+
 	//	| @@version_comment            |

@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/core"
-	"github.com/tangxusc/cqrs-db/pkg/db"
-	"github.com/tangxusc/cqrs-db/pkg/db/parser"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/parser"
 	"github.com/tangxusc/cqrs-db/pkg/util"
 	"github.com/xwb1989/sqlparser"
 	"strings"
@@ -14,7 +14,7 @@ import (
 var Columns = []string{"id", "type", "agg_id", "agg_type", "create_time", "data"}
 
 func init() {
-	db.Handlers = append(db.Handlers, &insertEvent{})
+	mysql.Handlers = append(mysql.Handlers, &insertEvent{})
 }
 
 type insertEvent struct {
@@ -34,7 +34,7 @@ func (s *insertEvent) Match(stmt sqlparser.Statement) bool {
 	return true
 }
 
-func (s *insertEvent) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
+func (s *insertEvent) Handler(query string, stmt sqlparser.Statement, handler *mysql_impl.ConnHandler) (*mysql.Result, error) {
 	result, e := parser.ParseInsert(stmt.(*sqlparser.Insert))
 	if e != nil {
 		return nil, e

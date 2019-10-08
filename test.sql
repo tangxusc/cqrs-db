@@ -8,6 +8,7 @@ create table test.event
     agg_type    varchar(36)  null,
     create_time timestamp    null,
     data        varchar(500) null,
+    version     int,
     mq_status   varchar(50)  null,
     constraint event_pk
         primary key (id)
@@ -20,6 +21,7 @@ create table test.snapshot
     agg_type    varchar(36)  null,
     create_time timestamp    null,
     data        varchar(500) null,
+    version     int,
     constraint snapshot_pk
         primary key (id)
 );

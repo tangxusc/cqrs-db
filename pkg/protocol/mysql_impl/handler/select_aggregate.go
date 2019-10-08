@@ -3,9 +3,9 @@ package handler
 import (
 	"fmt"
 	"github.com/siddontang/go-mysql/mysql"
-	"github.com/tangxusc/cqrs-db/pkg/aggregate"
-	"github.com/tangxusc/cqrs-db/pkg/db"
-	"github.com/tangxusc/cqrs-db/pkg/db/parser"
+	"github.com/tangxusc/cqrs-db/pkg/core"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/parser"
 	"github.com/xwb1989/sqlparser"
 	"strings"
 )
@@ -13,7 +13,7 @@ import (
 var ColumnsName = []string{"id", "agg_type", "data"}
 
 func init() {
-	db.Handlers = append(db.Handlers, &selectAggregate{})
+	mysql_impl.Handlers = append(mysql_impl.Handlers, &selectAggregate{})
 }
 
 type selectAggregate struct {
@@ -35,22 +35,16 @@ func (s *selectAggregate) Match(stmt sqlparser.Statement) bool {
 //example: select id as c1 , agg_type as c2, data as c3 from test_aggregate a1 where id='1'
 //example: select * from test_aggregate a1 where id='1'
 //example: select * from test_aggregate where id='1'
-func (s *selectAggregate) Handler(query string, stmt sqlparser.Statement, handler *db.ConnHandler) (*mysql.Result, error) {
+func (s *selectAggregate) Handler(query string, stmt sqlparser.Statement, handler *mysql_impl.ConnHandler) (*mysql.Result, error) {
 	parseResult := parser.ParseSelect(stmt.(*sqlparser.Select))
-	for key, _ := range parseResult.ColumnMap {
+	for key := range parseResult.ColumnMap {
 		if key != ColumnsName[0] && key != ColumnsName[1] && key != ColumnsName[2] {
 			return nil, fmt.Errorf("不支持的列名称:%v", key)
 		}
 	}
 	id, aggType := ParseIdAndType(parseResult)
-	source, e := aggregate.GetSource(id, aggType, handler)
-	if e != nil {
-		return nil, e
-	}
-	data, e := source.Sourcing(handler)
-	if e != nil {
-		return nil, e
-	}
+
+	data, e := core.Sourcing(id, aggType)
 	rows := make([][]interface{}, 0, 1)
 	rows = append(rows, []interface{}{id, aggType, data})
 
@@ -71,7 +65,7 @@ func getColumn(result *parser.SelectParseResult) []string {
 		return ColumnsName
 	}
 	returns := make([]string, 3)
-	for key, _ := range returns {
+	for key := range returns {
 		returns[key] = result.ColumnMap[ColumnsName[key]]
 	}
 	return returns

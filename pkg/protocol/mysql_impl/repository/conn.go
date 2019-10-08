@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
 	"github.com/tangxusc/cqrs-db/pkg/config"
 	"time"
@@ -114,6 +115,25 @@ func (c *Conn) Query(query string, newRow func(types []*sql.ColumnType) []interf
 			return e
 		}
 		rowAfter(row)
+	}
+	return nil
+}
+
+func (c *Conn) QueryOne(sqlString string, scan []interface{}, param ...interface{}) error {
+	logrus.Debugf("[proxy]QueryOne:%s,param:%v", sqlString, param)
+	stmt, e := c.Prepare(sqlString)
+	if e != nil {
+		return e
+	}
+	defer stmt.Close()
+	row := stmt.QueryRow(param...)
+	e = row.Scan(scan...)
+	//未找到记录
+	if e != nil && e == sql.ErrNoRows {
+		return nil
+	}
+	if e != nil {
+		return e
 	}
 	return nil
 }
