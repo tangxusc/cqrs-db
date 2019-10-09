@@ -30,9 +30,14 @@ func SetEventStore(r EventStore) {
 
 var aggregateCache AggregateManager
 
+func SetAggregateManager(a AggregateManager) {
+	aggregateCache = a
+}
+
 /*
 具有淘汰机制,在内存不足时,淘汰某些aggregate
 可根据key获取aggregate
+map 定长(先入先出) 时间过期
 */
 type AggregateManager interface {
 	Get(aggId, aggType string) *Aggregate

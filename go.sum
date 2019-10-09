@@ -2,6 +2,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/ReneKroon/ttlcache v1.5.0 h1:0Luphc9I1i69ZFS5lz8IbRdfUtaIasCupC7a1bdv4qs=
+github.com/ReneKroon/ttlcache v1.5.0/go.mod h1:xNNC3V12gOmuW0nSe07tgl8JNTqIQqnd0OPkv4j5F14=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/apache/pulsar/pulsar-client-go v0.0.0-20190815013325-900d81ae701b h1:gZoLj2PDNeQ7k74YmowJ6ml3ivZwdM2jY6/DZv+0MTk=

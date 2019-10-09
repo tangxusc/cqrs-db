@@ -3,6 +3,7 @@ module github.com/tangxusc/cqrs-db
 go 1.12
 
 require (
+	github.com/ReneKroon/ttlcache v1.5.0
 	github.com/apache/pulsar/pulsar-client-go v0.0.0-20190815013325-900d81ae701b
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gofrs/uuid v3.2.0+incompatible

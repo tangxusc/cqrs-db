@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tangxusc/cqrs-db/pkg/config"
 	"github.com/tangxusc/cqrs-db/pkg/core"
+	"github.com/tangxusc/cqrs-db/pkg/memory"
 	"github.com/tangxusc/cqrs-db/pkg/mq"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/proxy"
@@ -37,7 +38,8 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			core.SetEventStore(repository.NewEventStoreImpl(conn))
 			core.SetSnapshotStore(repository.NewSnapshotStoreImpl(conn))
 			core.SetSnapshotSaveStrategy(repository.NewCountStrategy(100))
-			//TODO:AggregateManager
+			impl := memory.NewAggregateManagerImpl(ctx)
+			core.SetAggregateManager(impl)
 
 			sender, e := mq.NewSender(ctx)
 			if e != nil {
