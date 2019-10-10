@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ReneKroon/ttlcache"
+	"github.com/sirupsen/logrus"
 	"github.com/tangxusc/cqrs-db/pkg/core"
 	"time"
 )
@@ -17,8 +18,15 @@ func NewAggregateManagerImpl(ctx context.Context) *AggregateManagerImpl {
 	aggm := &AggregateManagerImpl{ctx: ctx}
 	cache := ttlcache.NewCache()
 	cache.SetTTL(time.Minute * 10)
+	cache.SetExpirationCallback(stopEntry)
 	aggm.container = cache
 	return aggm
+}
+
+func stopEntry(key string, value interface{}) {
+	logrus.Debugf("[AggregateManager]Aggregate expiration on %s", key)
+	entry := value.(*AggregateEntry)
+	entry.cancel()
 }
 
 type AggregateEntry struct {
