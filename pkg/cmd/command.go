@@ -9,6 +9,7 @@ import (
 	"github.com/tangxusc/cqrs-db/pkg/memory"
 	"github.com/tangxusc/cqrs-db/pkg/mq"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
+	_ "github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/handler"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/proxy"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/repository"
 	"math/rand"

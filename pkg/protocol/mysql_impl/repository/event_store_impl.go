@@ -17,14 +17,14 @@ func (s *EventStoreImpl) FindByOrderByAsc(aggId string, aggType string, t *time.
 	events := make([]*core.Event, 0)
 	newRow := func(types []*sql.ColumnType) []interface{} {
 		e := &core.Event{}
-		result := []interface{}{&e.Id, &e.Type, &e.AggId, &e.AggType, &e.CreateTime, &e.Data}
+		result := []interface{}{&e.Id, &e.Type, &e.AggId, &e.AggType, &e.CreateTime, &e.Data, &e.Version, &e.Status}
 		events = append(events, e)
 		return result
 	}
 	if t == nil || t.IsZero() {
-		err = s.db.QueryList(`select * from event where agg_id=? and agg_type=? order by create_time asc`, newRow, aggId, aggType)
+		err = s.db.QueryList(`select id,type,agg_id,agg_type,create_time,data,revision,mq_status from event where agg_id=? and agg_type=? order by create_time asc`, newRow, aggId, aggType)
 	} else {
-		err = s.db.QueryList(`select * from event where agg_id=? and agg_type=? and create_time > ? order by create_time asc`, newRow, aggId, aggType, t)
+		err = s.db.QueryList(`select id,type,agg_id,agg_type,create_time,data,revision,mq_status from event where agg_id=? and agg_type=? and create_time > ? order by create_time asc`, newRow, aggId, aggType, t)
 	}
 	if err != nil {
 		return events, err
@@ -36,11 +36,11 @@ func (s *EventStoreImpl) FindNotSentEventOrderByAsc() (core.Events, error) {
 	events := make([]*core.Event, 0)
 	newRow := func(types []*sql.ColumnType) []interface{} {
 		e := &core.Event{}
-		result := []interface{}{&e.Id, &e.Type, &e.AggId, &e.AggType, &e.CreateTime, &e.Data, &e.Status}
+		result := []interface{}{&e.Id, &e.Type, &e.AggId, &e.AggType, &e.CreateTime, &e.Data, &e.Version, &e.Status}
 		events = append(events, e)
 		return result
 	}
-	e := s.db.QueryList(`select id,type,agg_id,agg_type,create_time,data,mq_status from event where mq_status=? order by create_time asc`, newRow, core.NotSend)
+	e := s.db.QueryList(`select id,type,agg_id,agg_type,create_time,data,revision,mq_status from event where mq_status=? order by create_time asc`, newRow, core.NotSend)
 	if e != nil {
 		logrus.Warnf("[EventStoreImpl]获取未发送event出现错误,%v", e)
 		return nil, e
@@ -67,7 +67,7 @@ func (s *EventStoreImpl) SaveEvents(events core.Events) error {
 	}
 	data := make([][]interface{}, len(events))
 	for k, v := range events {
-		data[k] = []interface{}{v.Id, v.Type, v.AggId, v.AggType, v.CreateTime, v.Data, core.NotSend}
+		data[k] = []interface{}{v.Id, v.Type, v.AggId, v.AggType, v.CreateTime, v.Data, core.NotSend, v.Version}
 	}
-	return s.db.Execs(`into event(id, type, agg_id, agg_type, create_time, data, mq_status) values (?,?,?,?,?,?,?)`, data)
+	return s.db.Execs(`insert into event(id, type, agg_id, agg_type, create_time, data, mq_status, revision) values (?,?,?,?,?,?,?,?)`, data)
 }

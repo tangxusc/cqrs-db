@@ -30,8 +30,8 @@ func (event *Event) SuccessSend() error {
 	return eventRepository.UpdateEventStatus(event, NotSend)
 }
 
-func NewEvent(id string, eventType string, aggId string, aggType string, createTime time.Time, data string) *Event {
-	return &Event{Id: id, Type: eventType, AggId: aggId, AggType: aggType, CreateTime: createTime, Data: data, Status: NotSend}
+func NewEvent(id string, eventType string, aggId string, aggType string, createTime time.Time, data string, version int) *Event {
+	return &Event{Id: id, Type: eventType, AggId: aggId, AggType: aggType, CreateTime: createTime, Data: data, Status: NotSend, Version: version}
 }
 
 type Events []*Event
@@ -52,7 +52,7 @@ func (events Events) Group(keyBuild KeyBuild) map[string]Events {
 		key := keyBuild(v)
 		value, ok := result[key]
 		if !ok {
-			value = make([]*Event, 1)
+			value = make([]*Event, 0)
 		}
 		value = append(value, v)
 		result[key] = value

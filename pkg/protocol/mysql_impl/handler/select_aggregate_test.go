@@ -27,7 +27,7 @@ func TestHandler(t *testing.T) {
 }
 
 func TestFunc(t *testing.T) {
-	event := core.NewEvent(``, ``, ``, ``, time.Now(), ``)
+	event := core.NewEvent(``, ``, ``, ``, time.Now(), ``, 0)
 	retry := &Retry{}
 	do := retry.Do(func(e error) {
 		e = event.SuccessSend()

@@ -7,14 +7,15 @@ import (
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/parser"
 	"github.com/tangxusc/cqrs-db/pkg/util"
 	"github.com/xwb1989/sqlparser"
+	"strconv"
 	"strings"
 	"time"
 )
 
-var Columns = []string{"id", "type", "agg_id", "agg_type", "create_time", "data"}
+var Columns = []string{"id", "type", "agg_id", "agg_type", "create_time", "data", "version"}
 
 func init() {
-	mysql.Handlers = append(mysql.Handlers, &insertEvent{})
+	mysql_impl.Handlers = append(mysql_impl.Handlers, &insertEvent{})
 }
 
 type insertEvent struct {
@@ -60,7 +61,12 @@ func BuildEvents(parseResult *parser.InsertParseResult) (events core.Events, e e
 			return
 		}
 		data := string(parseResult.ValueMaps["data"][k].([]byte))
-		events[k] = core.NewEvent(id, eventType, aggId, aggType, createTime, data)
+		var version int
+		version, e = strconv.Atoi(string(parseResult.ValueMaps["version"][k].([]byte)))
+		if e != nil {
+			return
+		}
+		events[k] = core.NewEvent(id, eventType, aggId, aggType, createTime, data, version)
 	}
-	return events, nil
+	return
 }

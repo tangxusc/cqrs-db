@@ -18,10 +18,20 @@ type EventSenderImpl struct {
 }
 
 func (s *EventSenderImpl) Send(event *core.Event) error {
-	e := s.sendEvent(event)
+	bytes, e := json.Marshal(event)
 	if e != nil {
-		logrus.Errorf("[event]发送事件错误,错误:%v", e)
 		return e
+	}
+	e = s.producer.Send(s.ctx, pulsar.ProducerMessage{
+		Payload:    bytes,
+		Key:        getKey(event),
+		Properties: map[string]string{event.AggType: event.AggId},
+	})
+	if e != nil {
+		logrus.Errorf("[pulsar]发送事件错误,错误:%v", e)
+		return e
+	} else {
+		logrus.Debugf("[pulsar]发送事件成功,聚合[%s-%s],版本[%s]", event.AggType, event.AggId, event.Version)
 	}
 	return nil
 }
@@ -36,7 +46,7 @@ func NewSender(ctx context.Context) (sender *EventSenderImpl, e error) {
 		MessageListenerThreads:  runtime.NumCPU(),
 	})
 	if e != nil {
-		logrus.Errorf("[event]连接pulsar出现错误,错误:%v", e.Error())
+		logrus.Errorf("[pulsar]连接pulsar出现错误,错误:%v", e.Error())
 		return nil, e
 	}
 
@@ -44,7 +54,7 @@ func NewSender(ctx context.Context) (sender *EventSenderImpl, e error) {
 		Topic: config.Instance.Pulsar.TopicName,
 	})
 	if e != nil {
-		logrus.Errorf("[event]创建pulsar.producer出现错误,错误:%v", e.Error())
+		logrus.Errorf("[pulsar]创建pulsar.producer出现错误,错误:%v", e.Error())
 		return nil, e
 	}
 	sender = &EventSenderImpl{
@@ -58,18 +68,6 @@ func NewSender(ctx context.Context) (sender *EventSenderImpl, e error) {
 func (s *EventSenderImpl) Close() {
 	s.producer.Close()
 	s.client.Close()
-}
-
-func (s *EventSenderImpl) sendEvent(event *core.Event) error {
-	bytes, e := json.Marshal(event)
-	if e != nil {
-		return e
-	}
-	return s.producer.Send(s.ctx, pulsar.ProducerMessage{
-		Payload:    bytes,
-		Key:        getKey(event),
-		Properties: map[string]string{event.AggType: event.AggId},
-	})
 }
 
 func getKey(event *core.Event) string {

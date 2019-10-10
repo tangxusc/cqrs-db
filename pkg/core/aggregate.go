@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"strings"
 	"time"
 )
@@ -39,27 +40,33 @@ func NewAggregate(aggId, aggType string, ctx context.Context) (*Aggregate, error
 	agg := &Aggregate{
 		AggId:        aggId,
 		AggType:      aggType,
-		eventsChan:   make(chan Events, 10),
-		recoveryChan: make(chan Events, 10),
+		eventsChan:   make(chan Events),
+		recoveryChan: make(chan Events),
 		cache:        NewAggregateCache(),
 	}
 	e := agg.SyncCache()
 	if e != nil {
 		return nil, e
 	}
-	agg.Start(ctx)
+	go agg.Start(ctx)
 
 	return agg, nil
 }
 
 func (a *Aggregate) Start(ctx context.Context) {
 	a.ctx = ctx
+	//panic时,也可以关闭chan
+	defer func() {
+		close(a.eventsChan)
+		close(a.recoveryChan)
+		if e := recover(); e != nil {
+			logrus.Errorf("[Aggregate] Aggregate[%s-%s] error:%v", a.AggType, a.AggId, e)
+		}
+	}()
 	for {
 		select {
 		//优先级1
 		case <-ctx.Done():
-			close(a.eventsChan)
-			close(a.recoveryChan)
 			return
 		default:
 			var events Events
@@ -71,9 +78,20 @@ func (a *Aggregate) Start(ctx context.Context) {
 				select {
 				//优先级3
 				case events = <-a.eventsChan:
-					a.sendEvent(events)
+					//读取无缓存chan,处理完一个才读取下一个,不存在并发
+					//计算快照,并缓存data
+					e := a.applyEvents(a.cache.Data, events)
+					if e != nil {
+						panic(e)
+					}
+					go func() {
+						allow := snapshotSaveStrategy.Allow(a.AggId, a.AggType, a.cache.Data, events)
+						if allow {
+							snapshotStore.Save(a.AggId, a.AggType, a.cache)
+						}
+					}()
+					go a.sendEvent(events)
 				default:
-					break
 				}
 			}
 		}
@@ -93,10 +111,17 @@ func (a *Aggregate) sendEvent(events Events) {
 		//发送成功,但是数据库写入出错了
 		//TODO:这个错误怎么办? 是否可以放到recovery中?
 		e = event.SuccessSend()
+		if e != nil {
+			logrus.Warnf("[Aggregate] %s-%s sendEvent error:%v , begin retry...", a.AggType, a.AggId, e)
+		}
 	}
 }
 
 func (a *Aggregate) PutSendChan(events Events) error {
+	minVersion := minVersion(events)
+	if a.cache.Version >= minVersion {
+		return fmt.Errorf(`[Aggregate]聚合[%s-%s]版本错误,当前版本:%v,传入的最小版本:%v`, a.AggType, a.AggId, a.cache.Version, minVersion)
+	}
 	//保存event
 	err := eventRepository.SaveEvents(events)
 	if err != nil {
@@ -108,23 +133,19 @@ func (a *Aggregate) PutSendChan(events Events) error {
 	default:
 		select {
 		case a.eventsChan <- events:
-			//TODO:考虑并发
-			//计算快照,并缓存data
-			e := a.applyEvents(a.cache.Data, events)
-			if e != nil {
-				return e
-			}
-			go func() {
-				allow := snapshotSaveStrategy.Allow(a.AggId, a.AggType, a.cache.Data, events)
-				if allow {
-					snapshotStore.Save(a.AggId, a.AggType, a.cache)
-				}
-			}()
 			return nil
-		default:
-			return fmt.Errorf("队列已满")
 		}
 	}
+}
+
+func minVersion(events Events) int {
+	var min = events[0].Version
+	for _, v := range events {
+		if v.Version < min {
+			min = v.Version
+		}
+	}
+	return min
 }
 
 func (a *Aggregate) PutRecoveryChan(events Events) error {
@@ -135,8 +156,6 @@ func (a *Aggregate) PutRecoveryChan(events Events) error {
 		select {
 		case a.recoveryChan <- events:
 			return nil
-		default:
-			return fmt.Errorf("队列已满")
 		}
 	}
 }
@@ -183,11 +202,21 @@ func (a *Aggregate) applyEvents(data string, events []*Event) (e error) {
 	}
 
 	a.cache = &AggregateCache{
-		UpdateTime: &events[len(events)].CreateTime,
+		UpdateTime: &events[len(events)-1].CreateTime,
 		Data:       string(bytes),
-		Version:    events[len(events)].Version,
+		Version:    maxVersion(events),
 	}
 	return
+}
+
+func maxVersion(events []*Event) int {
+	var max int
+	for _, v := range events {
+		if v.Version > max {
+			max = v.Version
+		}
+	}
+	return max
 }
 
 /*
@@ -196,7 +225,7 @@ func (a *Aggregate) applyEvents(data string, events []*Event) (e error) {
 func (a *Aggregate) SyncCache() error {
 	var t *time.Time
 	var d string
-	if a.cache == nil || a.cache.UpdateTime.IsZero() {
+	if a.cache == nil || a.cache.UpdateTime == nil || a.cache.UpdateTime.IsZero() {
 		t = nil
 		d = ""
 	} else {

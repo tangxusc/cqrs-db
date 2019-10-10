@@ -52,6 +52,7 @@ func (a *AggregateManagerImpl) Get(aggId, aggType string) *core.Aggregate {
 	defer func() {
 		if e := recover(); e != nil {
 			entry.cancel()
+			logrus.Errorf(`[AggregateManager]Get Aggregate error:%s`, e)
 		}
 	}()
 	aggregate, e := core.NewAggregate(aggId, aggType, entry.ctx)

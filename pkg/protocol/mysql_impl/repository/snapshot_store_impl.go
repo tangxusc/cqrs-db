@@ -27,15 +27,15 @@ func (s *SnapshotStoreImpl) FindLastOrderByCreateTimeDesc(aggId string, aggType 
 	}
 	if err != nil {
 		//没找到快照也进行聚合
-		logrus.Warnf("[aggregate]查找快照出现错误,聚合:%v:%v,错误:%v", aggType, aggId, err)
+		logrus.Warnf("[aggregate]查找快照出现错误,聚合:%v-%v,错误:%v", aggType, aggId, err)
 	}
 	return sn, nil
 }
 
 func (s *SnapshotStoreImpl) Save(aggId string, aggType string, cache *core.AggregateCache) {
-	e := s.db.Exec(`insert into snapshot(id, agg_id, agg_type, create_time, data, version) values (?, ?, ?, ?, ?,?)`,
+	e := s.db.Exec(`insert into snapshot(id, agg_id, agg_type, create_time, data, revision) values (?, ?, ?, ?, ?,?)`,
 		util.GenerateUuid(), aggId, aggType, cache.UpdateTime, cache.Data, cache.Version)
 	if e != nil {
-		logrus.Warnf("[snapshot]保存快照失败,聚合:%v:%v,错误:%v", aggType, aggId, e)
+		logrus.Warnf("[snapshot]保存快照失败,聚合:%v-%v,错误:%v", aggType, aggId, e)
 	}
 }
