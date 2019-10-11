@@ -10,7 +10,7 @@ func NewCountStrategy(max int) *CountStrategy {
 	return &CountStrategy{Max: max}
 }
 
-func (s *CountStrategy) Allow(aggId string, aggType string, data string, events core.Events) bool {
+func (s *CountStrategy) Allow(aggId string, aggType string, data map[string]interface{}, events core.Events) bool {
 	if len(events) > s.Max {
 		return true
 	}

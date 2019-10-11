@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	"github.com/sirupsen/logrus"
 	"github.com/tangxusc/cqrs-db/pkg/core"
 	"github.com/tangxusc/cqrs-db/pkg/util"
@@ -33,8 +34,12 @@ func (s *SnapshotStoreImpl) FindLastOrderByCreateTimeDesc(aggId string, aggType 
 }
 
 func (s *SnapshotStoreImpl) Save(aggId string, aggType string, cache *core.AggregateCache) {
-	e := s.db.Exec(`insert into snapshot(id, agg_id, agg_type, create_time, data, revision) values (?, ?, ?, ?, ?,?)`,
-		util.GenerateUuid(), aggId, aggType, cache.UpdateTime, cache.Data, cache.Version)
+	bytes, e := json.Marshal(cache.Data)
+	if e != nil {
+		logrus.Warnf("[snapshot]保存快照失败,聚合:%v-%v,错误:%v", aggType, aggId, e)
+	}
+	e = s.db.Exec(`insert into snapshot(id, agg_id, agg_type, create_time, data, revision) values (?, ?, ?, ?, ?,?)`,
+		util.GenerateUuid(), aggId, aggType, cache.UpdateTime, string(bytes), cache.Version)
 	if e != nil {
 		logrus.Warnf("[snapshot]保存快照失败,聚合:%v-%v,错误:%v", aggType, aggId, e)
 	}

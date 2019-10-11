@@ -11,14 +11,14 @@ import (
 
 type AggregateCache struct {
 	UpdateTime *time.Time
-	Data       string
+	Data       map[string]interface{}
 	Version    int
 }
 
 func NewAggregateCache() *AggregateCache {
 	return &AggregateCache{
 		UpdateTime: nil,
-		Data:       "",
+		Data:       make(map[string]interface{}),
 		Version:    0,
 	}
 }
@@ -166,44 +166,45 @@ func (a *Aggregate) PutRecoveryChan(events Events) error {
 3,进行json merge溯源
 4,返回结果
 */
-func (a *Aggregate) Sourcing() (string, error) {
-	return a.cache.Data, nil
+func (a *Aggregate) Sourcing() (map[string]interface{}, int, error) {
+	return a.cache.Data, a.cache.Version, nil
 }
 
-func Sourcing(id, aggType string) (data string, e error) {
+func Sourcing(id, aggType string) (data map[string]interface{}, version int, e error) {
 	agg := aggregateCache.Get(id, aggType)
 	if agg == nil {
-		return "", nil
+		return nil, 0, nil
 	}
 	return agg.Sourcing()
 }
 
-func (a *Aggregate) applyEvents(data string, events []*Event) (e error) {
+func (a *Aggregate) applyEvents(data map[string]interface{}, events []*Event) (e error) {
 	if len(events) == 0 {
 		return
 	}
+	marshal, e := json.Marshal(data)
+	if e != nil {
+		return e
+	}
+	aggData := string(marshal)
 	//按照顺序合并数据
 	//聚合版本字段处理,如果小于当前版本,则需要丢弃这个event
 	for _, value := range events {
 		if a.cache != nil && a.cache.Version > value.Version {
 			continue
 		}
-		data = data + value.Data
-		data = strings.ReplaceAll(data, "}{", ",")
+		aggData = aggData + value.Data
+		aggData = strings.ReplaceAll(aggData, "}{", ",")
 	}
 	var result map[string]interface{}
-	e = json.Unmarshal([]byte(data), &result)
-	if e != nil {
-		return
-	}
-	bytes, e := json.Marshal(result)
+	e = json.Unmarshal([]byte(aggData), &result)
 	if e != nil {
 		return
 	}
 
 	a.cache = &AggregateCache{
 		UpdateTime: &events[len(events)-1].CreateTime,
-		Data:       string(bytes),
+		Data:       result,
 		Version:    maxVersion(events),
 	}
 	return
@@ -224,10 +225,10 @@ func maxVersion(events []*Event) int {
 */
 func (a *Aggregate) SyncCache() error {
 	var t *time.Time
-	var d string
+	var d map[string]interface{}
 	if a.cache == nil || a.cache.UpdateTime == nil || a.cache.UpdateTime.IsZero() {
 		t = nil
-		d = ""
+		d = make(map[string]interface{})
 	} else {
 		t = a.cache.UpdateTime
 		d = a.cache.Data
@@ -240,7 +241,11 @@ func (a *Aggregate) SyncCache() error {
 	if snap != nil && !snap.CreateTime.IsZero() {
 		//快照数据为最新数据
 		t = snap.CreateTime
-		d = snap.Data
+		d = make(map[string]interface{})
+		e = json.Unmarshal([]byte(snap.Data), &d)
+		if e != nil {
+			return e
+		}
 	}
 	//t 4种情况
 	//1,cache nil && snap ==nil       t == nil

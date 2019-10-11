@@ -44,7 +44,9 @@ func (s *selectAggregate) Handler(query string, stmt sqlparser.Statement, handle
 	}
 	id, aggType := ParseIdAndType(parseResult)
 
-	data, e := core.Sourcing(id, aggType)
+	data, version, e := core.Sourcing(id, aggType)
+	data["version"] = version
+	//TODO:data 为map格式,可以支持吗?
 	rows := make([][]interface{}, 0, 1)
 	rows = append(rows, []interface{}{id, aggType, data})
 
@@ -64,7 +66,7 @@ func getColumn(result *parser.SelectParseResult) []string {
 	if len(result.ColumnMap) == 0 {
 		return ColumnsName
 	}
-	returns := make([]string, 3)
+	returns := make([]string, len(ColumnsName))
 	for key := range returns {
 		returns[key] = result.ColumnMap[ColumnsName[key]]
 	}

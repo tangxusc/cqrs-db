@@ -69,7 +69,7 @@ func SetSnapshotStore(s SnapshotStore) {
 }
 
 type SnapshotSaveStrategy interface {
-	Allow(aggId string, aggType string, data string, events Events) bool
+	Allow(aggId string, aggType string, data map[string]interface{}, events Events) bool
 }
 
 func SetSnapshotSaveStrategy(s SnapshotSaveStrategy) {
