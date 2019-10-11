@@ -8,6 +8,8 @@ import (
 	"github.com/tangxusc/cqrs-db/pkg/core"
 	"github.com/tangxusc/cqrs-db/pkg/memory"
 	"github.com/tangxusc/cqrs-db/pkg/mq"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl"
+	"github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl/handler"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
 	_ "github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/handler"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/proxy"
@@ -25,19 +27,14 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			rand.Seed(time.Now().Unix())
 			config.InitLog()
-			//连接代理数据库
-			conn, e := repository.InitConn(ctx)
+
+			e := StartMysqlProtocol(ctx)
 			if e != nil {
 				return e
 			}
-			defer conn.Close()
 
-			//启动mysql协议
-			go mysql_impl.Start(ctx)
-			proxy.SetConn(conn)
+			StartMongoProtocol(ctx)
 
-			core.SetEventStore(repository.NewEventStoreImpl(conn))
-			core.SetSnapshotStore(repository.NewSnapshotStoreImpl(conn))
 			core.SetSnapshotSaveStrategy(repository.NewCountStrategy(100))
 			impl := memory.NewAggregateManagerImpl(ctx)
 			core.SetAggregateManager(impl)
@@ -60,6 +57,31 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	config.BindParameter(command)
 
 	return command
+}
+
+func StartMongoProtocol(ctx context.Context) {
+	mongo := mongo_impl.NewMongoServer(config.Instance.Mongo.Port)
+	mongo.AddQueryHandler(handler.GetBaseQueryHandler()...)
+	//TODO:聚合查询处理handler
+	//TODO:保存event handler
+	//TODO: eventStore
+	//TODO: snapshotStore
+	go mongo.Start(ctx)
+}
+
+func StartMysqlProtocol(ctx context.Context) error {
+	//连接代理数据库
+	conn, e := repository.InitConn(ctx)
+	if e != nil {
+		return e
+	}
+	defer conn.Close()
+	//启动mysql协议
+	go mysql_impl.Start(ctx)
+	proxy.SetConn(conn)
+	core.SetEventStore(repository.NewEventStoreImpl(conn))
+	core.SetSnapshotStore(repository.NewSnapshotStoreImpl(conn))
+	return e
 }
 
 func HandlerNotify(cancel context.CancelFunc) {

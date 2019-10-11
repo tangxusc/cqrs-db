@@ -21,7 +21,7 @@ func InitLog() {
 }
 
 func BindParameter(cmd *cobra.Command) {
-	viper.SetEnvPrefix("DB")
+	viper.SetEnvPrefix("cqrs")
 	viper.AutomaticEnv()
 
 	cmd.PersistentFlags().BoolVarP(&Instance.Debug, debugArgName, "v", false, "debug mod")
@@ -41,6 +41,8 @@ func BindParameter(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.Url, "pulsar-url", "", "pulsar://localhost:6650", "pulsar消息中间件地址")
 	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.TopicName, "pulsar-topic-name", "", "cqrs-db", "pulsar消息中间件主题名称")
 
+	cmd.PersistentFlags().StringVarP(&Instance.Mongo.Port, "mongo-port", "", "27017", "mongo server端口")
+
 	_ = viper.BindPFlag(debugArgName, cmd.PersistentFlags().Lookup(debugArgName))
 	_ = viper.BindPFlag("db-port", cmd.PersistentFlags().Lookup("db-port"))
 	_ = viper.BindPFlag("db-Username", cmd.PersistentFlags().Lookup("db-Username"))
@@ -57,6 +59,7 @@ func BindParameter(cmd *cobra.Command) {
 
 	_ = viper.BindPFlag("pulsar-url", cmd.PersistentFlags().Lookup("pulsar-url"))
 	_ = viper.BindPFlag("pulsar-topic-name", cmd.PersistentFlags().Lookup("pulsar-topic-name"))
+	_ = viper.BindPFlag("mongo-port", cmd.PersistentFlags().Lookup("mongo-port"))
 }
 
 type PulsarConfig struct {
@@ -64,11 +67,16 @@ type PulsarConfig struct {
 	TopicName string
 }
 
+type MongoConfig struct {
+	Port string
+}
+
 type Config struct {
 	Debug  bool
 	Db     *DbConfig
 	Proxy  *ProxyConfig
 	Pulsar *PulsarConfig
+	Mongo  *MongoConfig
 }
 
 type DbConfig struct {
@@ -81,6 +89,7 @@ var Instance = &Config{
 	Db:     &DbConfig{},
 	Proxy:  &ProxyConfig{},
 	Pulsar: &PulsarConfig{},
+	Mongo:  &MongoConfig{},
 }
 
 type ProxyConfig struct {
