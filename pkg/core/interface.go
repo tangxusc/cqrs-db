@@ -18,7 +18,7 @@ var eventRepository EventStore
 保存event
 */
 type EventStore interface {
-	SaveEvents(events Events) error
+	SaveEvents(aggregate *Aggregate, events Events) error
 	UpdateEventStatus(event *Event, before MqStatus) error
 	FindNotSentEventOrderByAsc() (Events, error)
 	FindByOrderByAsc(aggId string, aggType string, time *time.Time) (Events, error)

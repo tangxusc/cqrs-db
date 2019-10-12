@@ -61,7 +61,7 @@ func (s *EventStoreImpl) UpdateEventStatus(event *core.Event, before core.MqStat
 	return nil
 }
 
-func (s *EventStoreImpl) SaveEvents(events core.Events) error {
+func (s *EventStoreImpl) SaveEvents(aggregate *core.Aggregate, events core.Events) error {
 	if len(events) == 0 {
 		return fmt.Errorf("events不能为空")
 	}

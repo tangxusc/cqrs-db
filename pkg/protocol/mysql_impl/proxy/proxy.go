@@ -45,7 +45,7 @@ func Query(query string, newRow func(types []*sql.ColumnType) []interface{}, row
 }
 
 func Proxy(query string) (columnNames []string, columnValues [][]interface{}, err error) {
-	logrus.Debugf("[proxy]Proxy:%s", query)
+	logrus.Debugf("[proxy]Mysql:%s", query)
 	var temp interface{} = ""
 	var rowOrigin []interface{}
 	var result []interface{}

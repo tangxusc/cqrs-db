@@ -7,14 +7,16 @@ import (
 	"strings"
 )
 
-type Handler struct {
+type FindHandler struct {
 }
 
-func (q *Handler) Process(header *protocol.MsgHeader, r *protocol.Reader, conn *protocol.ConnContext) error {
-	query := &protocol.Query{}
-	if e := query.UnMarshal(r); e != nil {
-		return e
-	}
+func (q *FindHandler) Support(query *protocol.Query) bool {
+	fullCollectionName := strings.ToLower(query.FullCollectionName)
+	contains := strings.Contains(fullCollectionName, "_aggregate")
+	return contains
+}
+
+func (q *FindHandler) Process(query *protocol.Query, reply *protocol.Reply) error {
 	id, aggType, e := getAggInfo(query)
 	if e != nil {
 		return e
@@ -23,14 +25,9 @@ func (q *Handler) Process(header *protocol.MsgHeader, r *protocol.Reader, conn *
 	if e != nil {
 		return e
 	}
-	reply := protocol.NewReply(header.RequestID)
 	reply.NumberReturned = 1
 	data["version"] = version
 	reply.Documents = data
-	e = reply.Write(conn)
-	if e != nil {
-		return e
-	}
 	return nil
 }
 
@@ -46,4 +43,8 @@ func getAggInfo(query *protocol.Query) (string, string, error) {
 	}
 	collectionName := strings.ReplaceAll(fullCollectionName, "_aggregate", "")
 	return id.(string), collectionName, nil
+}
+
+func NewFindHandler() *FindHandler {
+	return &FindHandler{}
 }

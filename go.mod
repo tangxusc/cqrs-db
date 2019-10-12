@@ -12,6 +12,12 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/tangxusc/mongo-protocol v0.0.0-20190927085205-d9dd6b4a3f9e
+	github.com/tangxusc/mongo-protocol v0.0.0-20191012013931-49e7dee5443d
+	github.com/tidwall/pretty v1.0.0 // indirect
+	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
+	github.com/xdg/stringprep v1.0.0 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
+	go.mongodb.org/mongo-driver v1.1.2
+	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )

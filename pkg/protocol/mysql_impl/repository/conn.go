@@ -15,16 +15,16 @@ type Conn struct {
 }
 
 func InitConn(ctx context.Context) (*Conn, error) {
-	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s?charset=utf8&parseTime=true", config.Instance.Proxy.Username, config.Instance.Proxy.Password,
-		"tcp", config.Instance.Proxy.Address, config.Instance.Proxy.Port, config.Instance.Proxy.Database)
+	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s?charset=utf8&parseTime=true", config.Instance.Mysql.Username, config.Instance.Mysql.Password,
+		"tcp", config.Instance.Mysql.Address, config.Instance.Mysql.Port, config.Instance.Mysql.Database)
 	db, e := sql.Open("mysql", dsn)
 	if e != nil {
 		logrus.Errorf("[proxy]连接出现错误,url:%v,错误:%v", dsn, e.Error())
 		return nil, e
 	}
-	db.SetConnMaxLifetime(time.Duration(config.Instance.Proxy.LifeTime) * time.Second)
-	db.SetMaxOpenConns(config.Instance.Proxy.MaxOpen)
-	db.SetMaxIdleConns(config.Instance.Proxy.MaxIdle)
+	db.SetConnMaxLifetime(time.Duration(config.Instance.Mysql.LifeTime) * time.Second)
+	db.SetMaxOpenConns(config.Instance.Mysql.MaxOpen)
+	db.SetMaxIdleConns(config.Instance.Mysql.MaxIdle)
 	return &Conn{db}, nil
 }
 

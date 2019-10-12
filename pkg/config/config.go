@@ -25,24 +25,33 @@ func BindParameter(cmd *cobra.Command) {
 	viper.AutomaticEnv()
 
 	cmd.PersistentFlags().BoolVarP(&Instance.Debug, debugArgName, "v", false, "debug mod")
-	cmd.PersistentFlags().StringVarP(&Instance.Db.Port, "db-port", "p", "3307", "数据库端口")
-	cmd.PersistentFlags().StringVarP(&Instance.Db.Username, "db-Username", "u", "root", "用户名")
-	cmd.PersistentFlags().StringVarP(&Instance.Db.Password, "db-Password", "d", "123456", "密码")
+	cmd.PersistentFlags().StringVarP(&Instance.ServerDb.Port, "server-port", "p", "3307", "数据库端口")
+	cmd.PersistentFlags().StringVarP(&Instance.ServerDb.Username, "server-Username", "u", "root", "用户名")
+	cmd.PersistentFlags().StringVarP(&Instance.ServerDb.Password, "server-Password", "d", "123456", "密码")
 
-	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Address, "proxy-address", "", "172.17.0.2", "proxy数据库连接地址")
-	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Port, "proxy-port", "", "3306", "proxy数据库端口")
-	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Database, "proxy-Database", "", "test", "proxy数据库实例")
-	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Username, "proxy-Username", "", "root", "proxy数据库用户名")
-	cmd.PersistentFlags().StringVarP(&Instance.Proxy.Password, "proxy-Password", "", "123456", "proxy数据库密码")
-	cmd.PersistentFlags().IntVarP(&Instance.Proxy.LifeTime, "proxy-LifeTime", "", 10, "proxy数据库连接最大连接周期(秒)")
-	cmd.PersistentFlags().IntVarP(&Instance.Proxy.MaxOpen, "proxy-MaxOpen", "", 5, "proxy数据库最大连接数")
-	cmd.PersistentFlags().IntVarP(&Instance.Proxy.MaxIdle, "proxy-MaxIdle", "", 5, "proxy数据库最大等待数量")
+	cmd.PersistentFlags().StringVarP(&Instance.Mysql.Address, "mysql-address", "", "172.17.0.2", "mysql数据库连接地址")
+	cmd.PersistentFlags().StringVarP(&Instance.Mysql.Port, "mysql-port", "", "3306", "mysql数据库端口")
+	cmd.PersistentFlags().StringVarP(&Instance.Mysql.Database, "mysql-Database", "", "test", "mysql数据库实例")
+	cmd.PersistentFlags().StringVarP(&Instance.Mysql.Username, "mysql-Username", "", "root", "mysql数据库用户名")
+	cmd.PersistentFlags().StringVarP(&Instance.Mysql.Password, "mysql-Password", "", "123456", "mysql数据库密码")
+	cmd.PersistentFlags().IntVarP(&Instance.Mysql.LifeTime, "mysql-LifeTime", "", 10, "mysql数据库连接最大连接周期(秒)")
+	cmd.PersistentFlags().IntVarP(&Instance.Mysql.MaxOpen, "mysql-MaxOpen", "", 5, "mysql数据库最大连接数")
+	cmd.PersistentFlags().IntVarP(&Instance.Mysql.MaxIdle, "mysql-MaxIdle", "", 5, "mysql数据库最大等待数量")
 
 	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.Url, "pulsar-url", "", "pulsar://localhost:6650", "pulsar消息中间件地址")
 	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.TopicName, "pulsar-topic-name", "", "cqrs-db", "pulsar消息中间件主题名称")
 
-	cmd.PersistentFlags().StringVarP(&Instance.Mongo.Port, "mongo-port", "", "27017", "mongo server端口")
+	cmd.PersistentFlags().StringVarP(&Instance.Mongo.Address, "mongo-address", "", "172.17.0.2", "mongo数据库连接地址")
+	cmd.PersistentFlags().StringVarP(&Instance.Mongo.Port, "mongo-port", "", "27017", "mongo数据库端口")
+	cmd.PersistentFlags().StringVarP(&Instance.Mongo.Username, "mongo-Username", "", "root", "数据库用户名")
+	cmd.PersistentFlags().StringVarP(&Instance.Mongo.Password, "mongo-Password", "", "123456", "数据库密码")
+	cmd.PersistentFlags().IntVarP(&Instance.Mongo.LocalThreshold, "mongo-LocalThreshold", "", 3, "本地阀值")
+	cmd.PersistentFlags().IntVarP(&Instance.Mongo.MaxPoolSize, "mongo-MaxPoolSize", "", 10, "最大连接数")
+	cmd.PersistentFlags().IntVarP(&Instance.Mongo.MaxConnIdleTime, "mongo-MaxConnIdleTime", "", 5, "最大等待时间")
+	cmd.PersistentFlags().StringVarP(&Instance.Mongo.DbName, "mongo-DbName", "", "game", "mongo数据库名称")
+	cmd.PersistentFlags().StringVarP(&Instance.Mongo.CollectionName, "mongo-CollectionName", "", "game", "mongo集合名称")
 
+	//TODO:重写绑定
 	_ = viper.BindPFlag(debugArgName, cmd.PersistentFlags().Lookup(debugArgName))
 	_ = viper.BindPFlag("db-port", cmd.PersistentFlags().Lookup("db-port"))
 	_ = viper.BindPFlag("db-Username", cmd.PersistentFlags().Lookup("db-Username"))
@@ -68,31 +77,40 @@ type PulsarConfig struct {
 }
 
 type MongoConfig struct {
-	Port string
+	Address  string
+	Port     string
+	Username string
+	Password string
+
+	LocalThreshold  int
+	MaxPoolSize     int
+	MaxConnIdleTime int
+	DbName          string
+	CollectionName  string
 }
 
 type Config struct {
-	Debug  bool
-	Db     *DbConfig
-	Proxy  *ProxyConfig
-	Pulsar *PulsarConfig
-	Mongo  *MongoConfig
+	Debug    bool
+	ServerDb *ServerDbConfig
+	Mysql    *MysqlConfig
+	Pulsar   *PulsarConfig
+	Mongo    *MongoConfig
 }
 
-type DbConfig struct {
+type ServerDbConfig struct {
 	Port     string
 	Username string
 	Password string
 }
 
 var Instance = &Config{
-	Db:     &DbConfig{},
-	Proxy:  &ProxyConfig{},
-	Pulsar: &PulsarConfig{},
-	Mongo:  &MongoConfig{},
+	ServerDb: &ServerDbConfig{},
+	Mysql:    &MysqlConfig{},
+	Pulsar:   &PulsarConfig{},
+	Mongo:    &MongoConfig{},
 }
 
-type ProxyConfig struct {
+type MysqlConfig struct {
 	Address  string
 	Port     string
 	Database string

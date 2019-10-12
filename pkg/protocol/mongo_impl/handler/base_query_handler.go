@@ -36,7 +36,7 @@ func (l *ListDatabases) Support(query *protocol.Query) bool {
 	return ok
 }
 
-func (l *ListDatabases) Process(query *protocol.Query, reply *protocol.Reply) {
+func (l *ListDatabases) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
 	reply.Documents = map[string]interface{}{
 		"totalSize": 8888,
@@ -49,6 +49,7 @@ func (l *ListDatabases) Process(query *protocol.Query, reply *protocol.Reply) {
 			},
 		},
 	}
+	return nil
 }
 
 type IsMaster struct {
@@ -59,9 +60,10 @@ func (i *IsMaster) Support(query *protocol.Query) bool {
 	return ok
 }
 
-func (i *IsMaster) Process(query *protocol.Query, reply *protocol.Reply) {
+func (i *IsMaster) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
 	reply.Documents = map[string]interface{}{"isMaster": 1, "ok": 1}
+	return nil
 }
 
 type Whatsmyuri struct {
@@ -73,9 +75,10 @@ func (w *Whatsmyuri) Support(query *protocol.Query) bool {
 }
 
 //TODO:返回客户端更为准确的信息
-func (w *Whatsmyuri) Process(query *protocol.Query, reply *protocol.Reply) {
+func (w *Whatsmyuri) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
 	reply.Documents = map[string]interface{}{"you": "118.114.245.36:48780", "ok": 1}
+	return nil
 }
 
 type BuildInfo struct {
@@ -88,7 +91,7 @@ func (w *BuildInfo) Support(query *protocol.Query) bool {
 	}
 	return ok
 }
-func (w *BuildInfo) Process(query *protocol.Query, reply *protocol.Reply) {
+func (w *BuildInfo) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
 	reply.Documents = map[string]interface{}{
 		"version":          "4.2.0",
@@ -124,6 +127,7 @@ func (w *BuildInfo) Process(query *protocol.Query, reply *protocol.Reply) {
 		},
 		"ok": 1,
 	}
+	return nil
 }
 
 type ServerStatus struct {
@@ -135,9 +139,10 @@ func (w *ServerStatus) Support(query *protocol.Query) bool {
 }
 
 //TODO:考虑和返回客户详细信息进行同样的处理
-func (w *ServerStatus) Process(query *protocol.Query, reply *protocol.Reply) {
+func (w *ServerStatus) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
 	reply.Documents = map[string]interface{}{"you": "118.114.245.36:48780", "ok": 1}
+	return nil
 }
 
 func GetBaseQueryHandler() []protocol.QueryHandler {

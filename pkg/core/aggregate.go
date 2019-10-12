@@ -123,7 +123,7 @@ func (a *Aggregate) PutSendChan(events Events) error {
 		return fmt.Errorf(`[Aggregate]聚合[%s-%s]版本错误,当前版本:%v,传入的最小版本:%v`, a.AggType, a.AggId, a.cache.Version, minVersion)
 	}
 	//保存event
-	err := eventRepository.SaveEvents(events)
+	err := eventRepository.SaveEvents(a, events)
 	if err != nil {
 		return err
 	}

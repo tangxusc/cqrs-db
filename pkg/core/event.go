@@ -15,14 +15,14 @@ const (
 事件
 */
 type Event struct {
-	Id         string
-	Type       string
-	AggId      string
-	AggType    string
-	CreateTime time.Time
-	Data       string
-	Status     MqStatus
-	Version    int
+	Id         string    `bson:"id"`
+	Type       string    `bson:"event_type"`
+	AggId      string    `bson:"agg_id"`
+	AggType    string    `bson:"agg_type"`
+	CreateTime time.Time `bson:"create_time"`
+	Data       string    `bson:"data"`
+	Status     MqStatus  `bson:"status"`
+	Version    int       `bson:"version"`
 }
 
 func (event *Event) SuccessSend() error {
@@ -64,4 +64,13 @@ func (events Events) SendToRecovery() error {
 	event := events[0]
 	agg := aggregateCache.Get(event.AggId, event.AggType)
 	return agg.PutRecoveryChan(events)
+}
+
+func (events Events) ToEventArray() []*Event {
+	return events
+}
+
+//TODO:可以删除
+func (events Events) Length() int {
+	return len([]*Event(events))
 }

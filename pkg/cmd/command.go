@@ -14,6 +14,7 @@ import (
 	_ "github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/handler"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/proxy"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/repository"
+	protocol "github.com/tangxusc/mongo-protocol"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -60,10 +61,11 @@ func NewCommand(ctx context.Context) *cobra.Command {
 }
 
 func StartMongoProtocol(ctx context.Context) {
-	mongo := mongo_impl.NewMongoServer(config.Instance.Mongo.Port)
+	mongo := mongo_impl.NewMongoServer(config.Instance.ServerDb.Port)
 	mongo.AddQueryHandler(handler.GetBaseQueryHandler()...)
-	//TODO:聚合查询处理handler
-	//TODO:保存event handler
+	mongo.AddQueryHandler(handler.NewFindHandler())
+	mongo.AddHandler(protocol.OP_INSERT, handler.NewInsertHandler())
+
 	//TODO: eventStore
 	//TODO: snapshotStore
 	go mongo.Start(ctx)

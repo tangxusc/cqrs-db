@@ -28,12 +28,10 @@ func (s *MongoServer) Process(header *protocol.MsgHeader, r *protocol.Reader, co
 	reply := protocol.NewReply(header.RequestID)
 	for _, item := range s.QueryHandlers {
 		if item.Support(query) {
-			item.Process(query, reply)
-			break
+			return item.Process(query, reply)
 		}
 	}
-	s.DefaultQueryHandler.Process(query, reply)
-	return nil
+	return s.DefaultQueryHandler.Process(query, reply)
 }
 
 func NewMongoServer(port string) *MongoServer {
@@ -57,7 +55,8 @@ func (d *defaultQueryHandler) Support(query *protocol.Query) bool {
 	return true
 }
 
-func (d *defaultQueryHandler) Process(query *protocol.Query, reply *protocol.Reply) {
+func (d *defaultQueryHandler) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
 	reply.Documents = map[string]interface{}{"ok": 1}
+	return nil
 }

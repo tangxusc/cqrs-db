@@ -16,14 +16,14 @@ import (
 const serverVersion = "8.0.3"
 
 func Start(ctx context.Context) {
-	l, e := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", config.Instance.Db.Port))
+	l, e := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%s", config.Instance.ServerDb.Port))
 	if e != nil {
 		logrus.Errorf("[db]监听tcp出现错误,错误:%v", e.Error())
 		os.Exit(1)
 	}
 	provider := server.NewInMemoryProvider()
 	//TODO:证书
-	provider.AddUser(config.Instance.Db.Username, config.Instance.Db.Password)
+	provider.AddUser(config.Instance.ServerDb.Username, config.Instance.ServerDb.Password)
 	var tlsConf = server.NewServerTLSConfig(test_keys.CaPem, test_keys.CertPem, test_keys.KeyPem, tls.VerifyClientCertIfGiven)
 	newServer := server.NewServer(serverVersion, mysql.DEFAULT_COLLATION_ID, mysql.AUTH_SHA256_PASSWORD, test_keys.PubPem, tlsConf)
 	for {
