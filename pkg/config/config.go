@@ -29,7 +29,7 @@ func BindParameter(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&Instance.ServerDb.Username, "server-Username", "u", "root", "用户名")
 	cmd.PersistentFlags().StringVarP(&Instance.ServerDb.Password, "server-Password", "d", "123456", "密码")
 	cmd.PersistentFlags().IntVarP(&Instance.ServerDb.RecoveryInterval, "server-RecoveryInterval", "", 5, "恢复周期")
-	cmd.PersistentFlags().IntVarP(&Instance.ServerDb.MaxEventToSnapshot, "server-MaxEventToSnapshot", "", 50, "最大事件转换为快照")
+	cmd.PersistentFlags().UintVarP(&Instance.ServerDb.MaxEventToSnapshot, "server-MaxEventToSnapshot", "", 50, "最大事件转换为快照")
 
 	cmd.PersistentFlags().BoolVarP(&Instance.Mysql.Enable, "mysql-enable", "", false, "启用mysql作为后端存储")
 	cmd.PersistentFlags().StringVarP(&Instance.Mysql.Address, "mysql-address", "", "localhost", "mysql数据库连接地址")
