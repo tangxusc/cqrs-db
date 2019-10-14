@@ -10,6 +10,7 @@ import (
 	"github.com/tangxusc/cqrs-db/pkg/mq"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl/handler"
+	mongoRepository "github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl/repository"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl"
 	_ "github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/handler"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mysql_impl/proxy"
@@ -29,14 +30,15 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			rand.Seed(time.Now().Unix())
 			config.InitLog()
 
-			e := StartMysqlProtocol(ctx)
-			if e != nil {
+			if e := StartMysqlProtocol(ctx); e != nil {
 				return e
 			}
 
-			StartMongoProtocol(ctx)
+			if e := StartMongoProtocol(ctx); e != nil {
+				return e
+			}
 
-			core.SetSnapshotSaveStrategy(repository.NewCountStrategy(100))
+			core.SetSnapshotSaveStrategyFactory(repository.NewCountStrategyFactory(config.Instance.ServerDb.MaxEventToSnapshot))
 			impl := memory.NewAggregateManagerImpl(ctx)
 			core.SetAggregateManager(impl)
 
@@ -60,30 +62,40 @@ func NewCommand(ctx context.Context) *cobra.Command {
 	return command
 }
 
-func StartMongoProtocol(ctx context.Context) {
-	mongo := mongo_impl.NewMongoServer(config.Instance.ServerDb.Port)
-	mongo.AddQueryHandler(handler.GetBaseQueryHandler()...)
-	mongo.AddQueryHandler(handler.NewFindHandler())
-	mongo.AddHandler(protocol.OP_INSERT, handler.NewInsertHandler())
-
-	//TODO: eventStore
-	//TODO: snapshotStore
-	go mongo.Start(ctx)
+func StartMongoProtocol(ctx context.Context) error {
+	if config.Instance.Mongo.Enable {
+		mongo := mongo_impl.NewMongoServer(config.Instance.ServerDb.Port)
+		mongo.AddQueryHandler(handler.GetBaseQueryHandler()...)
+		mongo.AddQueryHandler(handler.NewFindHandler())
+		mongo.AddHandler(protocol.OP_INSERT, handler.NewInsertHandler())
+		conn := mongoRepository.NewMongoConn()
+		e := conn.Conn(ctx)
+		if e != nil {
+			return e
+		}
+		core.SetEventStore(mongoRepository.NewEventStoreImpl(conn, ctx, config.Instance.Mongo.EventCollectionName))
+		core.SetSnapshotStore(mongoRepository.NewSnapshotStoreImpl(conn, ctx, config.Instance.Mongo.SnapshotCollectionName))
+		go mongo.Start(ctx)
+	}
+	return nil
 }
 
 func StartMysqlProtocol(ctx context.Context) error {
-	//连接代理数据库
-	conn, e := repository.InitConn(ctx)
-	if e != nil {
+	if config.Instance.Mysql.Enable {
+		//连接代理数据库
+		conn, e := repository.InitConn(ctx)
+		if e != nil {
+			return e
+		}
+		//启动mysql协议
+		go mysql_impl.Start(ctx)
+		proxy.SetConn(conn)
+		impl := repository.NewEventStoreImpl(conn)
+		core.SetEventStore(impl)
+		core.SetSnapshotStore(repository.NewSnapshotStoreImpl(conn))
 		return e
 	}
-	defer conn.Close()
-	//启动mysql协议
-	go mysql_impl.Start(ctx)
-	proxy.SetConn(conn)
-	core.SetEventStore(repository.NewEventStoreImpl(conn))
-	core.SetSnapshotStore(repository.NewSnapshotStoreImpl(conn))
-	return e
+	return nil
 }
 
 func HandlerNotify(cancel context.CancelFunc) {

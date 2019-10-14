@@ -15,38 +15,33 @@ type EventStoreImpl struct {
 	collectionName string
 }
 
-type MongoAggregate struct {
-	Id      string        `bson:"_id"`
-	AggType string        `bson:"agg_type"`
-	Events  []*core.Event `bson:"events"`
+func NewEventStoreImpl(mongoConn *MongoConn, ctx context.Context, collectionName string) *EventStoreImpl {
+	return &EventStoreImpl{MongoConn: mongoConn, ctx: ctx, collectionName: collectionName}
 }
 
 /*
 保存聚合事件
 */
 func (s *EventStoreImpl) SaveEvents(agg *core.Aggregate, events core.Events) error {
-	var update = true
-	andUpdate := s.Database(s.dbName).Collection(s.collectionName).FindOneAndUpdate(s.ctx,
-		bson.M{"_id": agg.AggId, "agg_type": agg.AggType},
-		bson.M{"$push": bson.M{"events": bson.M{"$each": events.ToEventArray()}}},
-		&options.FindOneAndUpdateOptions{
-			Upsert: &update,
-		})
-	return andUpdate.Err()
+	es := make([]interface{}, len(events))
+	for key, value := range events {
+		es[key] = value
+	}
+	_, e := s.Database(s.dbName).Collection(s.collectionName).InsertMany(s.ctx, es)
+	if e != nil {
+		return e
+	}
+	return nil
 }
 
 func (s *EventStoreImpl) UpdateEventStatus(event *core.Event, before core.MqStatus) error {
 	result, e := s.Database(s.dbName).Collection(s.collectionName).UpdateOne(s.ctx,
 		bson.M{
-			"_id":      event.AggId,
-			"agg_type": event.AggType,
-			"events": bson.M{
-				"$elemMatch": bson.M{"id": event.Id, "status": before},
-			},
+			"_id": event.Id,
 		},
 		bson.M{
 			"$set": bson.M{
-				"events.$.status": event.Status,
+				"status": event.Status,
 			},
 		})
 	if e != nil {
@@ -59,36 +54,65 @@ func (s *EventStoreImpl) UpdateEventStatus(event *core.Event, before core.MqStat
 func (s *EventStoreImpl) FindNotSentEventOrderByAsc() (core.Events, error) {
 	cursor, e := s.Database(s.dbName).Collection(s.collectionName).Find(s.ctx,
 		bson.M{
-			"events": bson.M{
-				"$elemMatch": bson.M{"status": core.NotSend},
+			"status": core.NotSend,
+		},
+		&options.FindOptions{
+			Sort: bson.M{
+				"create_time": 1,
 			},
 		},
 	)
-	//TODO:查询投影options.FindOptions{}
 	if e != nil {
 		return nil, e
 	}
 	events := make([]*core.Event, 0)
 	for cursor.Next(s.ctx) {
-		agg := &MongoAggregate{}
-		e := cursor.Decode(agg)
+		event := &core.Event{}
+		e := cursor.Decode(event)
 		if e != nil {
 			return nil, e
 		}
-		for _, event := range agg.Events {
-			if event.Status == core.NotSend {
-				events = append(events, event)
-			}
-		}
+		events = append(events, event)
 	}
 
 	return events, nil
 }
 
 func (s *EventStoreImpl) FindByOrderByAsc(aggId string, aggType string, time *time.Time) (core.Events, error) {
-	//{$match: {user_id : A_id} },
-	//{$unwind:"events"},
-	//{$match: {'bonus.type' : b} },
-	//cursor, e := s.Database(s.dbName).Collection(s.collectionName).Aggregate(s.ctx, )
-	panic("implement me")
+	var filter bson.M
+	if time == nil || time.IsZero() {
+		filter = bson.M{
+			"agg_id":   aggId,
+			"agg_type": aggType,
+		}
+	} else {
+		filter = bson.M{
+			"agg_id":   aggId,
+			"agg_type": aggType,
+			"create_time": bson.M{
+				"$gt": time,
+			},
+		}
+	}
+	cursor, e := s.Database(s.dbName).Collection(s.collectionName).Find(s.ctx,
+		filter,
+		&options.FindOptions{
+			Sort: bson.M{
+				"create_time": 1,
+			},
+		},
+	)
+	if e != nil {
+		return nil, e
+	}
+	events := make([]*core.Event, 0)
+	for cursor.Next(s.ctx) {
+		event := &core.Event{}
+		e := cursor.Decode(event)
+		if e != nil {
+			return nil, e
+		}
+		events = append(events, event)
+	}
+	return events, nil
 }

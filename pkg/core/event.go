@@ -15,7 +15,7 @@ const (
 事件
 */
 type Event struct {
-	Id         string    `bson:"id"`
+	Id         string    `bson:"_id"`
 	Type       string    `bson:"event_type"`
 	AggId      string    `bson:"agg_id"`
 	AggType    string    `bson:"agg_type"`
@@ -39,7 +39,10 @@ type Events []*Event
 func (events Events) SaveAndSend() error {
 	//获取aggregate,并放入聚合发送队列,再由聚合发送出
 	event := events[0]
-	agg := aggregateCache.Get(event.AggId, event.AggType)
+	agg, e := aggregateCache.Get(event.AggId, event.AggType)
+	if e != nil {
+		return e
+	}
 
 	return agg.PutSendChan(events)
 }
@@ -62,15 +65,13 @@ func (events Events) Group(keyBuild KeyBuild) map[string]Events {
 
 func (events Events) SendToRecovery() error {
 	event := events[0]
-	agg := aggregateCache.Get(event.AggId, event.AggType)
+	agg, e := aggregateCache.Get(event.AggId, event.AggType)
+	if e != nil {
+		return e
+	}
 	return agg.PutRecoveryChan(events)
 }
 
 func (events Events) ToEventArray() []*Event {
 	return events
-}
-
-//TODO:可以删除
-func (events Events) Length() int {
-	return len([]*Event(events))
 }

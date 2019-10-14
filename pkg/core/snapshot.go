@@ -8,10 +8,10 @@ import (
 快照
 */
 type Snapshot struct {
-	Id         string
-	AggId      string
-	AggType    string
-	CreateTime *time.Time
-	Data       string
-	Version    int
+	Id         string                 `bson:"_id"`
+	AggId      string                 `bson:"agg_id"`
+	AggType    string                 `bson:"agg_type"`
+	CreateTime *time.Time             `bson:"create_time"`
+	Data       map[string]interface{} `bson:"data"`
+	Version    int                    `bson:"version"`
 }

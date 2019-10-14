@@ -16,6 +16,7 @@ func (q *FindHandler) Support(query *protocol.Query) bool {
 	return contains
 }
 
+//db.a1_aggregate.find({'id':'4'})
 func (q *FindHandler) Process(query *protocol.Query, reply *protocol.Reply) error {
 	id, aggType, e := getAggInfo(query)
 	if e != nil {

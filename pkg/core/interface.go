@@ -40,7 +40,7 @@ func SetAggregateManager(a AggregateManager) {
 map 定长(先入先出) 时间过期
 */
 type AggregateManager interface {
-	Get(aggId, aggType string) *Aggregate
+	Get(aggId, aggType string) (*Aggregate, error)
 }
 
 var eventSender EventSender
@@ -72,8 +72,12 @@ type SnapshotSaveStrategy interface {
 	Allow(aggId string, aggType string, data map[string]interface{}, events Events) bool
 }
 
-func SetSnapshotSaveStrategy(s SnapshotSaveStrategy) {
-	snapshotSaveStrategy = s
+type SnapshotSaveStrategyFactory interface {
+	NewStrategyInstance() SnapshotSaveStrategy
 }
 
-var snapshotSaveStrategy SnapshotSaveStrategy
+var snapshotSaveStrategyFactory SnapshotSaveStrategyFactory
+
+func SetSnapshotSaveStrategyFactory(f SnapshotSaveStrategyFactory) {
+	snapshotSaveStrategyFactory = f
+}

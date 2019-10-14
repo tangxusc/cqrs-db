@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/siddontang/go-mysql/mysql"
 	"github.com/tangxusc/cqrs-db/pkg/core"
@@ -46,9 +47,13 @@ func (s *selectAggregate) Handler(query string, stmt sqlparser.Statement, handle
 
 	data, version, e := core.Sourcing(id, aggType)
 	data["version"] = version
-	//TODO:data 为map格式,可以支持吗?
+	bytes, e := json.Marshal(data)
+	if e != nil {
+		return nil, e
+	}
+
 	rows := make([][]interface{}, 0, 1)
-	rows = append(rows, []interface{}{id, aggType, data})
+	rows = append(rows, []interface{}{id, aggType, string(bytes)})
 
 	resultSet, e := mysql.BuildSimpleTextResultset(getColumn(parseResult), rows)
 	if e != nil {

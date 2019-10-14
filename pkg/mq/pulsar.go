@@ -31,7 +31,7 @@ func (s *EventSenderImpl) Send(event *core.Event) error {
 		logrus.Errorf("[pulsar]发送事件错误,错误:%v", e)
 		return e
 	} else {
-		logrus.Debugf("[pulsar]发送事件成功,聚合[%s-%s],版本[%s]", event.AggType, event.AggId, event.Version)
+		logrus.Debugf("[pulsar]发送事件成功,聚合[%s-%s],版本[%v]", event.AggType, event.AggId, event.Version)
 	}
 	return nil
 }

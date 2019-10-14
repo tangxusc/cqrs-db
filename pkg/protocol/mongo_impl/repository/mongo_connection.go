@@ -18,6 +18,10 @@ type MongoConn struct {
 	dbName string
 }
 
+func NewMongoConn() *MongoConn {
+	return &MongoConn{}
+}
+
 func (c *MongoConn) Conn(ctx context.Context) (e error) {
 	//https://github.com/hwholiday/learning_tools/blob/master/mongodb/mongo-go-driver/main.go
 	opt := options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", config.Instance.Mongo.Address, config.Instance.Mongo.Port))
@@ -44,6 +48,13 @@ func (c *MongoConn) Conn(ctx context.Context) (e error) {
 		return
 	}
 	c.dbName = config.Instance.Mongo.DbName
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			c.Close(ctx)
+		}
+	}()
 	return
 }
 

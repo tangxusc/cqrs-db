@@ -26,6 +26,11 @@ func (s *MongoServer) Process(header *protocol.MsgHeader, r *protocol.Reader, co
 		return e
 	}
 	reply := protocol.NewReply(header.RequestID)
+	defer func() {
+		if e := reply.Write(conn); e != nil {
+			panic(e)
+		}
+	}()
 	for _, item := range s.QueryHandlers {
 		if item.Support(query) {
 			return item.Process(query, reply)

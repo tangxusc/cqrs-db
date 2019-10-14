@@ -143,6 +143,8 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/tangxusc/mongo-protocol v0.0.0-20191012013931-49e7dee5443d h1:VEKsQx1GKz/64MZbcwhxnvPZ9QEldffy4/86iVwW368=
 github.com/tangxusc/mongo-protocol v0.0.0-20191012013931-49e7dee5443d/go.mod h1:ITW1n0jpaFYf8KQcUFdXq7NwNRiN1uTVhtBYAxKRw7k=
+github.com/tangxusc/mongo-protocol v0.0.0-20191014081618-870ceaa9f666 h1:d1pFhXfNHzEhB+o7k5/x2ub9BD2MXYr9JwH7niipESU=
+github.com/tangxusc/mongo-protocol v0.0.0-20191014081618-870ceaa9f666/go.mod h1:ITW1n0jpaFYf8KQcUFdXq7NwNRiN1uTVhtBYAxKRw7k=
 github.com/tidwall/pretty v1.0.0 h1:HsD+QiTn7sK6flMKIvNmpqz1qrpP3Ps6jOKIKMooyg4=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=

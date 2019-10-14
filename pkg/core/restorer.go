@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"github.com/sirupsen/logrus"
+	"github.com/tangxusc/cqrs-db/pkg/config"
 	"time"
 )
 
@@ -10,16 +11,13 @@ type Restorer struct {
 	ticket *time.Ticker
 }
 
-/*
-   TODO:recovery 执行周期时间
-*/
 func NewRestorer() *Restorer {
 	return &Restorer{}
 }
 
 func (r *Restorer) Start(ctx context.Context) {
 	recovery()
-	r.ticket = time.NewTicker(time.Second * 5)
+	r.ticket = time.NewTicker(time.Second * time.Duration(config.Instance.ServerDb.RecoveryInterval))
 	go func() {
 		for {
 			select {

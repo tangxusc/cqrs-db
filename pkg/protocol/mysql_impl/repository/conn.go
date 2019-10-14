@@ -25,7 +25,14 @@ func InitConn(ctx context.Context) (*Conn, error) {
 	db.SetConnMaxLifetime(time.Duration(config.Instance.Mysql.LifeTime) * time.Second)
 	db.SetMaxOpenConns(config.Instance.Mysql.MaxOpen)
 	db.SetMaxIdleConns(config.Instance.Mysql.MaxIdle)
-	return &Conn{db}, nil
+	conn := &Conn{db}
+	go func() {
+		select {
+		case <-ctx.Done():
+			conn.Close()
+		}
+	}()
+	return conn, nil
 }
 
 func (c *Conn) Close() {

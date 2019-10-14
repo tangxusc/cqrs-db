@@ -6,6 +6,7 @@ import (
 	"github.com/ReneKroon/ttlcache"
 	"github.com/sirupsen/logrus"
 	"github.com/tangxusc/cqrs-db/pkg/core"
+	"strings"
 	"time"
 )
 
@@ -43,10 +44,10 @@ func NewAggregateEntry(ctx context.Context) *AggregateEntry {
 	return entry
 }
 
-func (a *AggregateManagerImpl) Get(aggId, aggType string) *core.Aggregate {
+func (a *AggregateManagerImpl) Get(aggId, aggType string) (*core.Aggregate, error) {
 	target, exist := a.container.Get(key(aggId, aggType))
 	if exist {
-		return target.(*AggregateEntry).agg
+		return target.(*AggregateEntry).agg, nil
 	}
 	entry := NewAggregateEntry(a.ctx)
 	defer func() {
@@ -57,13 +58,13 @@ func (a *AggregateManagerImpl) Get(aggId, aggType string) *core.Aggregate {
 	}()
 	aggregate, e := core.NewAggregate(aggId, aggType, entry.ctx)
 	if e != nil {
-		panic(e)
+		return aggregate, e
 	}
 	entry.agg = aggregate
 	a.container.Set(key(aggId, aggType), entry)
-	return aggregate
+	return aggregate, nil
 }
 
 func key(aggId string, aggType string) string {
-	return fmt.Sprintf(`%s-%s`, aggType, aggId)
+	return fmt.Sprintf(`%s-%s`, strings.ToLower(aggType), strings.ToLower(aggId))
 }

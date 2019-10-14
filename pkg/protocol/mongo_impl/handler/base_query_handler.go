@@ -1,6 +1,9 @@
 package handler
 
-import protocol "github.com/tangxusc/mongo-protocol"
+import (
+	"github.com/tangxusc/cqrs-db/pkg/config"
+	protocol "github.com/tangxusc/mongo-protocol"
+)
 
 type ListDatabases struct {
 }
@@ -43,7 +46,7 @@ func (l *ListDatabases) Process(query *protocol.Query, reply *protocol.Reply) er
 		"ok":        1,
 		"databases": []interface{}{
 			map[string]interface{}{
-				"name":       "aggregate",
+				"name":       config.Instance.Mongo.DbName,
 				"sizeOnDisk": 8888,
 				"empty":      false,
 			},

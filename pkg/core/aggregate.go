@@ -27,22 +27,24 @@ func NewAggregateCache() *AggregateCache {
 聚合
 */
 type Aggregate struct {
-	AggId        string
-	AggType      string
-	eventsChan   chan Events
-	recoveryChan chan Events
-	ctx          context.Context
+	AggId                string
+	AggType              string
+	eventsChan           chan Events
+	recoveryChan         chan Events
+	ctx                  context.Context
+	snapshotSaveStrategy SnapshotSaveStrategy
 
 	cache *AggregateCache
 }
 
 func NewAggregate(aggId, aggType string, ctx context.Context) (*Aggregate, error) {
 	agg := &Aggregate{
-		AggId:        aggId,
-		AggType:      aggType,
-		eventsChan:   make(chan Events),
-		recoveryChan: make(chan Events),
-		cache:        NewAggregateCache(),
+		AggId:                aggId,
+		AggType:              aggType,
+		eventsChan:           make(chan Events),
+		recoveryChan:         make(chan Events),
+		cache:                NewAggregateCache(),
+		snapshotSaveStrategy: snapshotSaveStrategyFactory.NewStrategyInstance(),
 	}
 	e := agg.SyncCache()
 	if e != nil {
@@ -85,7 +87,7 @@ func (a *Aggregate) Start(ctx context.Context) {
 						panic(e)
 					}
 					go func() {
-						allow := snapshotSaveStrategy.Allow(a.AggId, a.AggType, a.cache.Data, events)
+						allow := a.snapshotSaveStrategy.Allow(a.AggId, a.AggType, a.cache.Data, events)
 						if allow {
 							snapshotStore.Save(a.AggId, a.AggType, a.cache)
 						}
@@ -171,7 +173,10 @@ func (a *Aggregate) Sourcing() (map[string]interface{}, int, error) {
 }
 
 func Sourcing(id, aggType string) (data map[string]interface{}, version int, e error) {
-	agg := aggregateCache.Get(id, aggType)
+	agg, e := aggregateCache.Get(id, aggType)
+	if e != nil {
+		return nil, -1, e
+	}
 	if agg == nil {
 		return nil, 0, nil
 	}
@@ -182,11 +187,16 @@ func (a *Aggregate) applyEvents(data map[string]interface{}, events []*Event) (e
 	if len(events) == 0 {
 		return
 	}
-	marshal, e := json.Marshal(data)
-	if e != nil {
-		return e
+	var aggData string
+	if len(data) > 0 {
+		marshal, e := json.Marshal(data)
+		if e != nil {
+			return e
+		}
+		aggData = string(marshal)
+	} else {
+		aggData = ""
 	}
-	aggData := string(marshal)
 	//按照顺序合并数据
 	//聚合版本字段处理,如果小于当前版本,则需要丢弃这个event
 	for _, value := range events {
@@ -194,6 +204,7 @@ func (a *Aggregate) applyEvents(data map[string]interface{}, events []*Event) (e
 			continue
 		}
 		aggData = aggData + value.Data
+		aggData = strings.ReplaceAll(aggData, "}\n{", ",")
 		aggData = strings.ReplaceAll(aggData, "}{", ",")
 	}
 	var result map[string]interface{}
@@ -236,16 +247,17 @@ func (a *Aggregate) SyncCache() error {
 	//查找最后一个快照
 	snap, e := snapshotStore.FindLastOrderByCreateTimeDesc(a.AggId, a.AggType, t)
 	if e != nil {
-		return e
+		logrus.Errorf("[aggregate]查找快照出现错误,将使用全量event溯源,错误详情:%v", e)
 	}
-	if snap != nil && !snap.CreateTime.IsZero() {
+	if e != nil && snap != nil && snap.CreateTime != nil && !snap.CreateTime.IsZero() {
 		//快照数据为最新数据
 		t = snap.CreateTime
-		d = make(map[string]interface{})
-		e = json.Unmarshal([]byte(snap.Data), &d)
-		if e != nil {
-			return e
-		}
+		d = snap.Data
+		//d = make(map[string]interface{})
+		//e = json.Unmarshal([]byte(snap.Data), &d)
+		//if e != nil {
+		//	return e
+		//}
 	}
 	//t 4种情况
 	//1,cache nil && snap ==nil       t == nil

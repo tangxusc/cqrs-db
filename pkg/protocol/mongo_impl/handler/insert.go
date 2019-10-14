@@ -88,7 +88,12 @@ func (i *InsertHandler) buildEvents(insert *protocol.Insert) (core.Events, error
 		if e != nil {
 			return nil, e
 		}
-		event := core.NewEvent(util.GenerateUuid(), doc["eventType"].(string), doc["aggId"].(string), aggType, createTime, doc["data"].(string), doc["version"].(int))
+		fmt.Println(doc["eventType"])
+		bytes, e := bson.MarshalJSON(doc["data"])
+		if e != nil {
+			return nil, e
+		}
+		event := core.NewEvent(util.GenerateUuid(), doc["eventType"].(string), doc["aggId"].(string), aggType, createTime, string(bytes), int(doc["version"].(float64)))
 		events[k] = event
 	}
 	return events, nil
