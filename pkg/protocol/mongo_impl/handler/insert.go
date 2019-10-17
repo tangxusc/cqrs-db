@@ -20,7 +20,11 @@ func (i *InsertHandler) Process(header *protocol.MsgHeader, r *protocol.Reader, 
 	if e != nil {
 		return e
 	}
-	e = i.validateDocuments(insert)
+	return i.HandlerInsert(insert)
+}
+
+func (i *InsertHandler) HandlerInsert(insert *protocol.Insert) error {
+	e := i.validateDocuments(insert)
 	if e != nil {
 		return e
 	}
@@ -93,7 +97,7 @@ func (i *InsertHandler) buildEvents(insert *protocol.Insert) (core.Events, error
 		if e != nil {
 			return nil, e
 		}
-		event := core.NewEvent(util.GenerateUuid(), doc["eventType"].(string), doc["aggId"].(string), aggType, createTime, string(bytes), int(doc["version"].(float64)))
+		event := core.NewEvent(util.GenerateUuid(), doc["eventType"].(string), doc["aggId"].(string), aggType, createTime, string(bytes), doc["version"].(int))
 		events[k] = event
 	}
 	return events, nil

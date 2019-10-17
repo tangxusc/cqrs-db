@@ -18,6 +18,7 @@ type AggregateManagerImpl struct {
 func NewAggregateManagerImpl(ctx context.Context) *AggregateManagerImpl {
 	aggm := &AggregateManagerImpl{ctx: ctx}
 	cache := ttlcache.NewCache()
+	//TODO:过期时间配置
 	cache.SetTTL(time.Minute * 10)
 	cache.SetExpirationCallback(stopEntry)
 	aggm.container = cache

@@ -67,7 +67,9 @@ func StartMongoProtocol(ctx context.Context) error {
 		mongo := mongo_impl.NewMongoServer(config.Instance.ServerDb.Port)
 		mongo.AddQueryHandler(handler.GetBaseQueryHandler()...)
 		mongo.AddQueryHandler(handler.NewFindHandler())
-		mongo.AddHandler(protocol.OP_INSERT, handler.NewInsertHandler())
+		insertHandler := handler.NewInsertHandler()
+		mongo.AddHandler(protocol.OP_INSERT, insertHandler)
+		mongo.AddQueryHandler(handler.NewInsertFindHandler(insertHandler))
 		conn := mongoRepository.NewMongoConn()
 		e := conn.Conn(ctx)
 		if e != nil {

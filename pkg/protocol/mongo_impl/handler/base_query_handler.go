@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/tangxusc/cqrs-db/pkg/config"
 	protocol "github.com/tangxusc/mongo-protocol"
+	"time"
 )
 
 type ListDatabases struct {
@@ -65,7 +66,19 @@ func (i *IsMaster) Support(query *protocol.Query) bool {
 
 func (i *IsMaster) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
-	reply.Documents = map[string]interface{}{"isMaster": 1, "ok": 1}
+	reply.Documents = map[string]interface{}{
+		"ismaster":                     true,
+		"maxBsonObjectSize":            16777216,
+		"maxMessageSizeBytes":          48000000,
+		"maxWriteBatchSize":            100000,
+		"localTime":                    time.Now(),
+		"logicalSessionTimeoutMinutes": 30,
+		"connectionId":                 808,
+		"minWireVersion":               0,
+		"maxWireVersion":               3,
+		"readOnly":                     false,
+		"ok":                           1.0,
+	}
 	return nil
 }
 
@@ -97,7 +110,7 @@ func (w *BuildInfo) Support(query *protocol.Query) bool {
 func (w *BuildInfo) Process(query *protocol.Query, reply *protocol.Reply) error {
 	reply.NumberReturned = 1
 	reply.Documents = map[string]interface{}{
-		"version":          "4.2.0",
+		"version":          "3.4.0",
 		"gitVersion":       "a4b751dcf51dd249c5865812b390cfd1c0129c30",
 		"modules":          make([]string, 0),
 		"allocator":        "tcmalloc",

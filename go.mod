@@ -13,7 +13,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
-	github.com/tangxusc/mongo-protocol v0.0.0-20191014081618-870ceaa9f666
+	github.com/tangxusc/mongo-protocol v0.0.0-20191017101426-b669844959b6
 	github.com/tidwall/pretty v1.0.0 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v1.0.0 // indirect

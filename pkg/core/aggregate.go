@@ -253,11 +253,6 @@ func (a *Aggregate) SyncCache() error {
 		//快照数据为最新数据
 		t = snap.CreateTime
 		d = snap.Data
-		//d = make(map[string]interface{})
-		//e = json.Unmarshal([]byte(snap.Data), &d)
-		//if e != nil {
-		//	return e
-		//}
 	}
 	//t 4种情况
 	//1,cache nil && snap ==nil       t == nil
