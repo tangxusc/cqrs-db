@@ -62,7 +62,7 @@ func (a *Aggregate) Start(ctx context.Context) {
 		close(a.eventsChan)
 		close(a.recoveryChan)
 		if e := recover(); e != nil {
-			logrus.Errorf("[Aggregate] Aggregate[%s-%s] error:%v", a.AggType, a.AggId, e)
+			logrus.Errorf("[Aggregate] Aggregate[%s-%s] panic error:%v", a.AggType, a.AggId, e)
 		}
 	}()
 	for {
@@ -105,9 +105,13 @@ func (a *Aggregate) sendEvent(events Events) {
 	var e error
 	for i := 0; i < len(events); {
 		event = events[i]
-		e = eventSender.Send(event)
-		if e != nil {
-			continue
+		if eventSender != nil {
+			e = eventSender.Send(event)
+			if e != nil {
+				continue
+			}
+		} else {
+			logrus.Warnf("[Aggregate] EventSender is nil , event will not be sent")
 		}
 		i = i + 1
 		//发送成功,但是数据库写入出错了

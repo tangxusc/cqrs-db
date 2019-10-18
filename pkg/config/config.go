@@ -41,6 +41,7 @@ func BindParameter(cmd *cobra.Command) {
 	cmd.PersistentFlags().IntVarP(&Instance.Mysql.MaxOpen, "mysql-MaxOpen", "", 5, "mysql数据库最大连接数")
 	cmd.PersistentFlags().IntVarP(&Instance.Mysql.MaxIdle, "mysql-MaxIdle", "", 5, "mysql数据库最大等待数量")
 
+	cmd.PersistentFlags().BoolVarP(&Instance.Pulsar.Enable, "pulsar-enable", "", false, "是否启用pulsar")
 	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.Url, "pulsar-url", "", "pulsar://localhost:6650", "pulsar消息中间件地址")
 	cmd.PersistentFlags().StringVarP(&Instance.Pulsar.TopicName, "pulsar-topic-name", "", "cqrs-db", "pulsar消息中间件主题名称")
 
@@ -67,6 +68,7 @@ func BindParameter(cmd *cobra.Command) {
 	_ = viper.BindPFlag("mysql-MaxOpen", cmd.PersistentFlags().Lookup("mysql-MaxOpen"))
 	_ = viper.BindPFlag("mysql-MaxIdle", cmd.PersistentFlags().Lookup("mysql-MaxIdle"))
 
+	_ = viper.BindPFlag("pulsar-enable", cmd.PersistentFlags().Lookup("pulsar-enable"))
 	_ = viper.BindPFlag("pulsar-url", cmd.PersistentFlags().Lookup("pulsar-url"))
 	_ = viper.BindPFlag("pulsar-topic-name", cmd.PersistentFlags().Lookup("pulsar-topic-name"))
 
@@ -86,6 +88,7 @@ func BindParameter(cmd *cobra.Command) {
 type PulsarConfig struct {
 	Url       string
 	TopicName string
+	Enable    bool
 }
 
 type MongoConfig struct {

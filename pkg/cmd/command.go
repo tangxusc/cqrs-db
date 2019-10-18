@@ -42,12 +42,14 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			impl := memory.NewAggregateManagerImpl(ctx)
 			core.SetAggregateManager(impl)
 
-			sender, e := mq.NewSender(ctx)
-			if e != nil {
-				return e
+			if config.Instance.Pulsar.Enable {
+				sender, e := mq.NewSender(ctx)
+				if e != nil {
+					return e
+				}
+				defer sender.Close()
+				core.SetEventSender(sender)
 			}
-			defer sender.Close()
-			core.SetEventSender(sender)
 
 			//启动事件恢复机制
 			core.NewRestorer().Start(ctx)
