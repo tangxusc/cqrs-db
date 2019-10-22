@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+package rpc;
+
+//事件溯源,得到聚合
+service Events {
+    //发起事件溯源,得到聚合对象,用来作为 命令处理的聚合
+    rpc Publish (PublishRequest) returns (PublishResponse) {
+
+    }
+}
+//请求
+message PublishRequest {
+    string aggId = 1;
+    string aggType = 2;
+    int32 version = 3;
+    google.protobuf.Any data = 4;
+}
+///返回
+message PublishResponse {
+    int32 version = 2;
+}
