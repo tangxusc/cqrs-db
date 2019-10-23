@@ -15,7 +15,8 @@ message PublishRequest {
     string aggId = 1;
     string aggType = 2;
     int32 version = 3;
-    google.protobuf.Any data = 4;
+    string eventType = 4;
+    string data = 5;
 }
 ///返回
 message PublishResponse {

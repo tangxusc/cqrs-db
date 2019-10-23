@@ -8,6 +8,8 @@ import (
 	"github.com/tangxusc/cqrs-db/pkg/core"
 	"github.com/tangxusc/cqrs-db/pkg/memory"
 	"github.com/tangxusc/cqrs-db/pkg/mq"
+	rpc "github.com/tangxusc/cqrs-db/pkg/protocol/grpc_impl"
+	grpcHandler "github.com/tangxusc/cqrs-db/pkg/protocol/grpc_impl/handler"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl"
 	"github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl/handler"
 	mongoRepository "github.com/tangxusc/cqrs-db/pkg/protocol/mongo_impl/repository"
@@ -46,6 +48,18 @@ func NewCommand(ctx context.Context) *cobra.Command {
 			if e := StartMongoProtocol(ctx); e != nil {
 				return e
 			}
+
+			server, e := rpc.NewGrpcServer()
+			if e != nil {
+				return e
+			}
+			server.RegisterService(func(server *rpc.GrpcServer) {
+				publishHandler := grpcHandler.NewEventPublishHandler()
+				rpc.RegisterEventsServer(server.Server, publishHandler)
+				sourcingHandler := grpcHandler.NewSourcingHandler()
+				rpc.RegisterSourcingServer(server.Server, sourcingHandler)
+			})
+			go server.Start(ctx)
 
 			core.SetSnapshotSaveStrategyFactory(repository.NewCountStrategyFactory(config.Instance.ServerDb.MaxEventToSnapshot))
 			impl := memory.NewAggregateManagerImpl(ctx)

@@ -16,6 +16,10 @@ func NewRestorer() *Restorer {
 }
 
 func (r *Restorer) Start(ctx context.Context) {
+	if eventSender == nil {
+		logrus.Warnf("[recovery] EventSender 未配置,将不发送事件")
+		return
+	}
 	recovery()
 	r.ticket = time.NewTicker(time.Second * time.Duration(config.Instance.ServerDb.RecoveryInterval))
 	go func() {

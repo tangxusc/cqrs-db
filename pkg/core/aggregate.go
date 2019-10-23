@@ -92,7 +92,11 @@ func (a *Aggregate) Start(ctx context.Context) {
 							snapshotStore.Save(a.AggId, a.AggType, a.cache)
 						}
 					}()
-					go a.sendEvent(events)
+					if eventSender != nil {
+						go a.sendEvent(events)
+					} else {
+						logrus.Warnf("[Aggregate] EventSender is nil , event will not be sent")
+					}
 				default:
 				}
 			}
@@ -105,13 +109,9 @@ func (a *Aggregate) sendEvent(events Events) {
 	var e error
 	for i := 0; i < len(events); {
 		event = events[i]
-		if eventSender != nil {
-			e = eventSender.Send(event)
-			if e != nil {
-				continue
-			}
-		} else {
-			logrus.Warnf("[Aggregate] EventSender is nil , event will not be sent")
+		e = eventSender.Send(event)
+		if e != nil {
+			continue
 		}
 		i = i + 1
 		//发送成功,但是数据库写入出错了

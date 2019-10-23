@@ -57,6 +57,8 @@ func BindParameter(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&Instance.Mongo.EventCollectionName, "mongo-EventCollectionName", "", "event", "mongo event集合名称")
 	cmd.PersistentFlags().StringVarP(&Instance.Mongo.SnapshotCollectionName, "mongo-SnapshotCollectionName", "", "snapshot", "mongo event集合名称")
 
+	cmd.PersistentFlags().StringVarP(&Instance.Grpc.Port, "grpc-port", "", "6666", "grpc port")
+
 	_ = viper.BindPFlag(debugArgName, cmd.PersistentFlags().Lookup(debugArgName))
 	_ = viper.BindPFlag("mysql-enable", cmd.PersistentFlags().Lookup("mysql-enable"))
 	_ = viper.BindPFlag("mysql-address", cmd.PersistentFlags().Lookup("mysql-address"))
@@ -83,6 +85,8 @@ func BindParameter(cmd *cobra.Command) {
 	_ = viper.BindPFlag("mongo-DbName", cmd.PersistentFlags().Lookup("mongo-DbName"))
 	_ = viper.BindPFlag("mongo-EventCollectionName", cmd.PersistentFlags().Lookup("mongo-EventCollectionName"))
 	_ = viper.BindPFlag("mongo-SnapshotCollectionName", cmd.PersistentFlags().Lookup("mongo-SnapshotCollectionName"))
+
+	_ = viper.BindPFlag("grpc-port", cmd.PersistentFlags().Lookup("grpc-port"))
 }
 
 type PulsarConfig struct {
@@ -106,12 +110,17 @@ type MongoConfig struct {
 	Enable                 bool
 }
 
+type GrpcConfig struct {
+	Port string
+}
+
 type Config struct {
 	Debug    bool
 	ServerDb *ServerDbConfig
 	Mysql    *MysqlConfig
 	Pulsar   *PulsarConfig
 	Mongo    *MongoConfig
+	Grpc     *GrpcConfig
 }
 
 type ServerDbConfig struct {
@@ -127,6 +136,7 @@ var Instance = &Config{
 	Mysql:    &MysqlConfig{},
 	Pulsar:   &PulsarConfig{},
 	Mongo:    &MongoConfig{},
+	Grpc:     &GrpcConfig{},
 }
 
 type MysqlConfig struct {

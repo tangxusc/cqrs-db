@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	protocol "github.com/tangxusc/mongo-protocol"
+	"os"
 )
 
 func (s *MongoServer) Start(ctx context.Context) {
 	if e := s.Server.Start(ctx); e != nil {
 		logrus.Errorf(`[mongo]server error: %v`, e)
+		os.Exit(1)
 	}
 }
 

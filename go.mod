@@ -7,7 +7,7 @@ require (
 	github.com/apache/pulsar/pulsar-client-go v0.0.0-20190815013325-900d81ae701b
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gofrs/uuid v3.2.0+incompatible
-	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/golang/protobuf v1.3.2
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/siddontang/go-mysql v0.0.0-20190720022221-046188b858f9
 	github.com/sirupsen/logrus v1.4.2
@@ -19,6 +19,9 @@ require (
 	github.com/xdg/stringprep v1.0.0 // indirect
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2
 	go.mongodb.org/mongo-driver v1.1.2
-	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
+	golang.org/x/net v0.0.0-20191021144547-ec77196f6094
+	golang.org/x/sys v0.0.0-20191022100944-742c48ecaeb7 // indirect
+	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03 // indirect
+	google.golang.org/grpc v1.24.0
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )
