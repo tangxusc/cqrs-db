@@ -13,6 +13,7 @@ cqrs-db通过代理mysql的协议,实现在proxy层中完成cqrs中的事件溯�
 ```shell
 docker run --rm -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
 docker run --rm -it -p 6650:6650 -p 8080:8080 apachepulsar/pulsar:2.3.2 bin/pulsar standalone
+docker run -itd --rm -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=123456 mongo
 ```
 
 ### 2.初始化mysql
@@ -92,6 +93,11 @@ select * from agg_info;
 begin;
 insert into event_aggregate(type, agg_id, agg_type, create_time, data) values ('E1', '1', 'A1', '2018-08-02 12:00:00', '{"name":"test1"}'),('E1', '1', 'A1', '2018-08-03 14:00:00', '{"name":"test5"}');
 commit;
+```
+
+```sql
+db.a1_aggregate.find({'id':'4'})
+db.a1_event.insert({'aggId':'1','eventType':'test1','data':{'name':'testname1'},'version':1,'createTime':'2006-01-02 15:04:05'})
 ```
 
 ### 6.mysql本身的表查询
